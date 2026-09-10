@@ -1,0 +1,464 @@
+[
+  {
+    "name": "NOVAWERK - Offer Generator V1",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "name": "Manueller Start",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -1120,
+          120
+        ]
+      },
+      {
+        "parameters": {},
+        "name": "Angebots-Workflow Input",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -1120,
+          -60
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 15
+              }
+            ]
+          }
+        },
+        "name": "CRM-Status prüfen",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -1120,
+          -260
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { notionPageId: '', leadId: 'NW-INTERN-TEST', company: 'Interner Testbetrieb', name: 'Testkontakt', email: 'portfolio@example.com', website: 'https://example.invalid', projectDescription: 'Interner Test für die Erstellung eines Angebotsentwurfs.', selectedPackages: [{ id: 'landingpage', price: 1200 }, { id: 'lead-system', price: 1100 }], monthlyCare: { tier: 'Standard', price: 149 }, notes: 'Nur interner Test. Nicht versenden.' } }];"
+        },
+        "name": "Interne Angebots-Testdaten",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -880,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.notion.com/v1/databases/NOVAWERK_NOTION_DATABASE_ID/query",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "notionApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ { filter: { and: [ { property: 'Status', select: { equals: 'Angebot in Vorbereitung' } }, { property: 'Angebot erstellt', checkbox: { equals: false } } ] }, page_size: 50 } }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "Notion - Angebotsbereite Leads",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -880,
+          -260
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const pages = Array.isArray($json.results) ? $json.results : [];\nconst text = (property) => {\n  if (!property) return '';\n  if (property.type === 'title') return (property.title || []).map(v => v.plain_text || '').join('');\n  if (property.type === 'rich_text') return (property.rich_text || []).map(v => v.plain_text || '').join('');\n  if (property.type === 'email') return property.email || '';\n  if (property.type === 'url') return property.url || '';\n  if (property.type === 'phone_number') return property.phone_number || '';\n  if (property.type === 'select') return property.select?.name || '';\n  return '';\n};\nreturn pages.map(page => {\n  const p = page.properties || {};\n  const selectedPackages = (p['Leistungspakete']?.multi_select || []).map(option => {\n    const name = option.name;\n    if (name === 'Handwerker Landingpage') return { id: 'landingpage', price: p['Preis Landingpage']?.number || 0 };\n    if (name === 'Lead-System') return { id: 'lead-system', price: p['Preis Lead-System']?.number || 0 };\n    if (name === 'Automation & Betreuung') return { id: 'automation', price: p['Preis Automation']?.number || 0 };\n    return null;\n  }).filter(Boolean);\n  const tier = p['Monatliche Betreuung']?.select?.name || '';\n  return { json: { notionPageId: page.id, leadId: text(p['Lead ID']), company: text(p['Firma / Name']), name: text(p['Ansprechpartner']), email: text(p['E-Mail']), website: text(p['Website']), projectDescription: text(p['Anliegen']) + (text(p['Nachricht']) ? '\\n' + text(p['Nachricht']) : ''), selectedPackages, monthlyCare: tier ? { tier, price: p['Preis Betreuung']?.number || 0 } : null, notes: text(p['Notizen']) } };\n});"
+        },
+        "name": "CRM-Leads aufbereiten",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -640,
+          -260
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $json;\nconst packages = {\n  'landingpage': { title: 'Handwerker Landingpage', min: 900, max: 1500, items: ['Moderne Landingpage','Mobile Optimierung','Kontaktformular','DSGVO-orientierte Formularstruktur','Basis-SEO','Technische Einrichtung'] },\n  'lead-system': { title: 'Lead-System', min: 800, max: 1500, items: ['Formularanbindung','n8n Webhook','CRM-Speicherung','Interne Benachrichtigung','Eingangsbestätigung','Lead-Statusverwaltung'] },\n  'automation': { title: 'Automation & Betreuung', min: 1500, max: 3000, items: ['Individuelle Prozessautomationen','Follow-up-Erinnerungen','Anfrageverwaltung','Optimierung bestehender Abläufe','Monatliche Betreuung möglich'] }\n};\nconst chosen = Array.isArray(input.selectedPackages) ? input.selectedPackages : [];\nconst errors = [];\nconst normalized = chosen.map(entry => {\n  const id = String(entry.id || '');\n  const definition = packages[id];\n  const price = Number(entry.price || 0);\n  if (!definition) { errors.push(`Unbekanntes Paket: ${id}`); return null; }\n  if (price < definition.min || price > definition.max) errors.push(`${definition.title}: Preis muss zwischen ${definition.min} und ${definition.max} EUR liegen.`);\n  return { id, ...definition, price };\n}).filter(Boolean);\nif (!normalized.length) errors.push('Mindestens ein Leistungspaket muss ausgewählt und bepreist werden.');\nlet monthlyCare = null;\nif (input.monthlyCare?.tier) {\n  const tier = String(input.monthlyCare.tier);\n  const price = Number(input.monthlyCare.price || 0);\n  const valid = tier === 'Basic' ? price >= 49 && price <= 99 : tier === 'Standard' ? price === 149 : tier === 'Premium' ? price >= 249 && price <= 299 : false;\n  if (!valid) errors.push('Preis der monatlichen Betreuung liegt außerhalb des vorgesehenen Bereichs.');\n  monthlyCare = { tier, price };\n}\nconst now = new Date();\nconst date = now.toISOString().slice(0, 10);\nconst validUntil = new Date(now.getTime() + 14 * 86400000).toISOString().slice(0, 10);\nconst suffix = String(input.leadId || Date.now().toString(36)).replace(/[^a-z0-9]/gi, '').slice(-8).toUpperCase();\nconst offerNumber = `NW-ANG-${date.replace(/-/g, '')}-${suffix}`;\nconst total = normalized.reduce((sum, entry) => sum + entry.price, 0);\nreturn [{ json: { ...input, ready: errors.length === 0, errors, packages: normalized, monthlyCare, offerNumber, offerDate: date, validUntil, total, paymentTerms: '50 % Anzahlung bei Projektstart, 50 % nach Fertigstellung', nextStep: 'Angebot intern prüfen, freigeben und anschließend manuell versenden.' } }];"
+        },
+        "name": "Pakete & Preise validieren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -380,
+          -60
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.ready }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "name": "Angebot vollständig?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -140,
+          -60
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $json;\nconst esc = value => String(value ?? '').replace(/[&<>\"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[char]));\nconst money = value => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);\nconst packageHtml = d.packages.map(entry => `<section class=\"package\"><div class=\"package-head\"><h2>${esc(entry.title)}</h2><strong>${money(entry.price)}</strong></div><ul>${entry.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul></section>`).join('');\nconst careHtml = d.monthlyCare ? `<section class=\"care\"><h2>Monatliche Betreuung</h2><p>${esc(d.monthlyCare.tier)} · ${money(d.monthlyCare.price)} pro Monat</p></section>` : '';\nconst html = `<!doctype html><html lang=\"de\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Angebot ${esc(d.offerNumber)}</title><style>body{font-family:Arial,sans-serif;color:#0b2545;margin:0;background:#f5f7fa}main{max-width:820px;margin:32px auto;background:white;padding:54px}header{border-bottom:4px solid #1976d2;padding-bottom:24px;margin-bottom:34px}.brand{font-size:28px;font-weight:800}.brand small{display:block;color:#60758a;font-size:12px;letter-spacing:.08em;margin-top:5px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:28px 0}.box,.package,.care{border:1px solid #dce5ec;border-radius:10px;padding:20px;margin:16px 0}.package-head{display:flex;justify-content:space-between;gap:20px}.package h2,.care h2{font-size:18px;margin:0 0 12px}.package-head strong{color:#0866c6}li{margin:7px 0}.total{font-size:22px;font-weight:800;text-align:right;margin:28px 0}.fine{color:#526779;font-size:13px;line-height:1.6}footer{border-top:1px solid #dce5ec;margin-top:40px;padding-top:20px;color:#60758a;font-size:12px}@media print{body{background:#fff}main{margin:0;max-width:none}}</style></head><body><main><header><div class=\"brand\">NOVAWERK<small>DIGITALE SYSTEME FÜR HANDWERKSBETRIEBE</small></div></header><h1>Angebot</h1><div class=\"meta\"><div><strong>Angebotsnummer</strong><br>${esc(d.offerNumber)}</div><div><strong>Datum</strong><br>${esc(d.offerDate)}</div><div><strong>Kunde</strong><br>${esc(d.company || d.name)}</div><div><strong>Gültig bis</strong><br>${esc(d.validUntil)}</div></div><section class=\"box\"><h2>Projektbeschreibung</h2><p>${esc(d.projectDescription || 'Projektumfang gemäß Abstimmung.')}</p></section>${packageHtml}${careHtml}<div class=\"total\">Projektpreis: ${money(d.total)}</div><section class=\"box fine\"><strong>Zahlungsbedingungen</strong><p>${esc(d.paymentTerms)}</p><strong>Nächster Schritt</strong><p>${esc(d.nextStep)}</p></section><footer>NOVAWERK · Digitale Systeme für Handwerksbetriebe<br>Interner Angebotsentwurf – vor Versand manuell prüfen.</footer></main></body></html>`;\nconst summary = [`Angebot ${d.offerNumber}`, ...d.packages.map(p => `${p.title}: ${money(p.price)}`), `Gesamt: ${money(d.total)}`, d.monthlyCare ? `Betreuung: ${d.monthlyCare.tier} ${money(d.monthlyCare.price)}/Monat` : '', `Gültig bis: ${d.validUntil}`, d.paymentTerms].filter(Boolean).join('\\n');\nreturn [{ json: { ...d, offerSummary: summary, fileName: `${d.offerNumber}.html`, mimeType: 'text/html' }, binary: { data: { data: Buffer.from(html, 'utf8').toString('base64'), mimeType: 'text/html', fileName: `${d.offerNumber}.html`, fileExtension: 'html' } } }];"
+        },
+        "name": "NOVAWERK Angebotsentwurf erstellen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          100,
+          -140
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ 'https://api.notion.com/v1/pages/' + $json.notionPageId }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "notionApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ { properties: { 'Status': { select: { name: 'Angebot in Vorbereitung' } }, 'Angebot erstellt': { checkbox: true }, 'Angebotsnummer': { rich_text: [{ type: 'text', text: { content: $json.offerNumber } }] }, 'Angebotsdatum': { date: { start: $json.offerDate } }, 'Angebotsentwurf': { rich_text: [{ type: 'text', text: { content: $json.offerSummary.slice(0, 1900) } }] } } } }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "Notion - Entwurf vermerken",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          360,
+          -140
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Boolean($json.notionPageId) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "name": "Mit CRM-Datensatz verknüpft?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          340,
+          -140
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const draft = $('NOVAWERK Angebotsentwurf erstellen').item.json;\nconst notion = $json ?? {};\nconst notionUpdated = Boolean(notion.id) && !notion.error;\nreturn [{ json: { success: true, draftOnly: true, sent: false, offerNumber: draft.offerNumber, total: draft.total, validUntil: draft.validUntil, notionUpdated, notionPageId: notion.id || draft.notionPageId || '', fileName: draft.fileName, report: notionUpdated ? 'Angebotsentwurf erstellt und im CRM vermerkt. Keine E-Mail versendet.' : 'Angebotsentwurf erstellt; CRM-Aktualisierung muss geprüft werden. Keine E-Mail versendet.' }, binary: $('NOVAWERK Angebotsentwurf erstellen').item.binary }];"
+        },
+        "name": "Angebots-Abschlussbericht",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          620,
+          -140
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { success: false, draftOnly: true, sent: false, offerNumber: $json.offerNumber || '', errors: $json.errors || ['Unvollständige Angebotsdaten'], report: 'Kein Entwurf erstellt. Pakete und Preise müssen manuell ergänzt oder korrigiert werden.' } }];"
+        },
+        "name": "Angebots-Fehlerbericht",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          100,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://NOVAWERK_GOTENBERG:3000/forms/chromium/convert/html",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "parameterType": "formBinaryData",
+                "name": "files",
+                "inputDataFieldName": "data"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file",
+                "outputPropertyName": "pdf"
+              }
+            }
+          }
+        },
+        "name": "Optional - HTML zu PDF",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          360,
+          220
+        ],
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "content": "## Angebots-System\n- Es werden ausschließlich interne HTML-Entwürfe erstellt.\n- Kein Node versendet Angebote an Kunden.\n- Für statusgesteuerte Erstellung: Preise und Leistungspakete im CRM ergänzen.\n- `NOVAWERK_NOTION_DATABASE_ID` ersetzen und Notion-Credential auswählen.\n- Der PDF-Node ist deaktiviert und benötigt optional einen selbst gehosteten Gotenberg-Dienst.\n- Entwurf immer manuell prüfen, freigeben und versenden.\n- Testdaten nutzen die reservierte Domain `.invalid` und können keine externe E-Mail auslösen.",
+          "height": 340,
+          "width": 530
+        },
+        "name": "Angebots-Dokumentation",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -1120,
+          -640
+        ]
+      }
+    ],
+    "connections": {
+      "Manueller Start": {
+        "main": [
+          [
+            {
+              "node": "Interne Angebots-Testdaten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Interne Angebots-Testdaten": {
+        "main": [
+          [
+            {
+              "node": "Pakete & Preise validieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Angebots-Workflow Input": {
+        "main": [
+          [
+            {
+              "node": "Pakete & Preise validieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CRM-Status prüfen": {
+        "main": [
+          [
+            {
+              "node": "Notion - Angebotsbereite Leads",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Notion - Angebotsbereite Leads": {
+        "main": [
+          [
+            {
+              "node": "CRM-Leads aufbereiten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CRM-Leads aufbereiten": {
+        "main": [
+          [
+            {
+              "node": "Pakete & Preise validieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Pakete & Preise validieren": {
+        "main": [
+          [
+            {
+              "node": "Angebot vollständig?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Angebot vollständig?": {
+        "main": [
+          [
+            {
+              "node": "NOVAWERK Angebotsentwurf erstellen",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Angebots-Fehlerbericht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NOVAWERK Angebotsentwurf erstellen": {
+        "main": [
+          [
+            {
+              "node": "Mit CRM-Datensatz verknüpft?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mit CRM-Datensatz verknüpft?": {
+        "main": [
+          [
+            {
+              "node": "Notion - Entwurf vermerken",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Angebots-Abschlussbericht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Notion - Entwurf vermerken": {
+        "main": [
+          [
+            {
+              "node": "Angebots-Abschlussbericht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "Europe/Berlin",
+      "saveDataErrorExecution": "all",
+      "saveDataSuccessExecution": "all",
+      "saveManualExecutions": true
+    },
+    "nodeGroups": [],
+    "activeVersionId": null,
+    "versionCounter": 1,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

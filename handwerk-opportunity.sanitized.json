@@ -1,0 +1,682 @@
+{
+  "name": "HANDWERK OPPORTUNITY SYSTEM V1",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## HANDWERK OPPORTUNITY SYSTEM V1\nManueller Research-Workflow für neue Handwerksbetriebe im 30-km-Radius um Karlsruhe. Ändert keine bestehenden Workflows und sendet keine E-Mails.",
+        "height": 180,
+        "width": 460,
+        "color": 4
+      },
+      "name": "Sticky Note 33e7e2d0",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Benötigte Zugangsdaten\n- Google Places API Key als Header-Credential `X-Goog-Api-Key`\n- OpenAI Credential\n- Notion API Bearer <REDACTED>\n- Notion Database ID/URL im Node `Workflow Settings`",
+        "height": 220,
+        "width": 520,
+        "color": 3
+      },
+      "name": "Sticky Note 5267c360",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        320,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Logik\nDuplikate: Place ID, Domain, Telefon, Firmenname+Ort. Fehler bei Website/OpenAI/Notion werden gezählt; fehlende E-Mail bleibt leer.",
+        "height": 220,
+        "width": 520,
+        "color": 5
+      },
+      "name": "Sticky Note 7041642a",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        256
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "Manual Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        128,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { workflowName: 'HANDWERK OPPORTUNITY SYSTEM V1', city: 'Karlsruhe', center: { lat: 49.0069, lng: 8.4037 }, radiusMeters: 30000, maxPerTrade: 5, notionDatabaseInput: 'REPLACE_WITH_NOTION_DATABASE_ID_OR_URL', trades: ['Maler', 'Elektriker', 'Dachdecker', 'Sanitär', 'Heizungsbau', 'Gebäudereinigung', 'Garten- und Landschaftsbau'] } }];"
+      },
+      "name": "Workflow Settings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const settings = $input.first().json;\nconst normalizeDatabaseId = (value) => {\n  const raw = String(value || '').trim();\n  const compact = raw.replace(/-/g, '');\n  const match = compact.match(/[0-9a-fA-F]{32}/);\n  return match ? match[0] : raw;\n};\nreturn settings.trades.map((trade) => ({\n  json: {\n    trade,\n    textQuery: `${trade} Handwerksbetrieb Karlsruhe`,\n    city: settings.city,\n    center: settings.center,\n    radiusMeters: settings.radiusMeters,\n    maxResults: settings.maxPerTrade,\n    notionDatabaseId: normalizeDatabaseId(settings.notionDatabaseInput)\n  }\n}));"
+      },
+      "name": "Generate Trade Search Requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          },
+          "includeUnpaired": true
+        }
+      },
+      "name": "Merge Search Context",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1168,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://places.googleapis.com/v1/places:searchText",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Goog-FieldMask",
+              "value": "places.id,places.name,places.displayName,places.formattedAddress,places.location,places.googleMapsUri,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.businessStatus,places.primaryType,places.types"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": {
+          "textQuery": "={{ $json.textQuery }}",
+          "languageCode": "de",
+          "regionCode": "DE",
+          "maxResultCount": "={{ $json.maxResults }}",
+          "locationBias": {
+            "circle": {
+              "center": {
+                "latitude": "={{ $json.center.lat }}",
+                "longitude": "={{ $json.center.lng }}"
+              },
+              "radius": "={{ $json.radiusMeters }}"
+            }
+          }
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "name": "Search Google Places",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        912,
+        464
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst normalizePhone = (value) => String(value || '').replace(/[^0-9+]/g, '');\nconst normalizeDomain = (value) => {\n  try {\n    if (!value) return '';\n    const url = new URL(String(value).startsWith('http') ? value : `https://${value}`);\n    return url.hostname.replace(/^www\\./, '').toLowerCase();\n  } catch (e) { return ''; }\n};\nconst normalizeText = (value) => String(value || '').toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();\nconst getCity = (address, fallback) => {\n  const parts = String(address || '').split(',').map(p => p.trim()).filter(Boolean);\n  const karlsruhe = parts.find(p => /karlsruhe/i.test(p));\n  return karlsruhe || fallback || '';\n};\nconst candidates = [];\nlet found = 0;\nlet searchErrors = 0;\nfor (const item of items) {\n  const json = item.json || {};\n  if (json.error || Number(json.statusCode || 200) >= 400) searchErrors += 1;\n  const places = Array.isArray(json.places) ? json.places : (Array.isArray(json.body?.places) ? json.body.places : []);\n  found += places.length;\n  for (const place of places) {\n    const companyName = place.displayName?.text || place.displayName || place.name || '';\n    const website = place.websiteUri || '';\n    const phone = place.nationalPhoneNumber || place.internationalPhoneNumber || '';\n    const city = getCity(place.formattedAddress, json.city);\n    const domain = normalizeDomain(website);\n    const phoneKey = normalizePhone(phone);\n    const nameCityKey = `${normalizeText(companyName)}|${normalizeText(city)}`;\n    candidates.push({\n      placeId: place.id || place.name || '',\n      companyName,\n      trade: json.trade || '',\n      city,\n      address: place.formattedAddress || '',\n      website,\n      domain,\n      phone,\n      phoneKey,\n      email: '',\n      googleMapsUrl: place.googleMapsUri || '',\n      businessStatus: place.businessStatus || '',\n      nameCityKey,\n      source: 'Google Places',\n      notionDatabaseId: json.notionDatabaseId || '',\n      searchErrors\n    });\n  }\n}\nconst seen = new Set();\nconst unique = [];\nlet internalDuplicates = 0;\nfor (const c of candidates) {\n  const keys = [c.placeId && `place:${c.placeId}`, c.domain && `domain:${c.domain}`, c.phoneKey && `phone:${c.phoneKey}`, c.nameCityKey && `namecity:${c.nameCityKey}`].filter(Boolean);\n  const duplicate = keys.some(key => seen.has(key));\n  if (duplicate) { internalDuplicates += 1; continue; }\n  keys.forEach(key => seen.add(key));\n  unique.push(c);\n}\nreturn unique.map((c) => ({ json: { ...c, runMetrics: { foundBusinesses: found, internalDuplicates, searchErrors } } }));"
+      },
+      "name": "Normalize Places and Remove Internal Duplicates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.notion.com/v1/databases/{{ $json.notionDatabaseId }}/query",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": {
+          "page_size": 100
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "name": "Load Notion CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1680,
+        304
+      ],
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const normalizePhone = (value) => String(value || '').replace(/[^0-9+]/g, '');\nconst normalizeDomain = (value) => {\n  try { if (!value) return ''; const url = new URL(String(value).startsWith('http') ? value : `https://${value}`); return url.hostname.replace(/^www\\./, '').toLowerCase(); } catch (e) { return ''; }\n};\nconst normalizeText = (value) => String(value || '').toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();\nconst propText = (props, name) => {\n  const p = props?.[name];\n  if (!p) return '';\n  if (p.title) return p.title.map(x => x.plain_text || x.text?.content || '').join('');\n  if (p.rich_text) return p.rich_text.map(x => x.plain_text || x.text?.content || '').join('');\n  if (p.url) return p.url;\n  if (p.phone_number) return p.phone_number;\n  if (p.email) return p.email;\n  if (p.select) return p.select.name || '';\n  if (p.number !== undefined) return String(p.number);\n  return String(p.plain_text || '');\n};\nconst crmResponse = $input.first()?.json || {};\nconst crmLoadFailed = !!crmResponse.error || Number(crmResponse.statusCode || 200) >= 400;\nconst pages = Array.isArray(crmResponse.body?.results) ? crmResponse.body.results : (Array.isArray(crmResponse.results) ? crmResponse.results : []);\nconst existing = new Set();\nfor (const page of pages) {\n  const props = page.properties || {};\n  const company = propText(props, 'Firmenname');\n  const city = propText(props, 'Ort');\n  const website = propText(props, 'Website');\n  const phone = propText(props, 'Telefon');\n  const placeId = propText(props, 'Google Place ID');\n  const domain = normalizeDomain(website);\n  const phoneKey = normalizePhone(phone);\n  const nameCityKey = `${normalizeText(company)}|${normalizeText(city)}`;\n  [placeId && `place:${placeId}`, domain && `domain:${domain}`, phoneKey && `phone:${phoneKey}`, nameCityKey && `namecity:${nameCityKey}`].filter(Boolean).forEach(k => existing.add(k));\n}\nconst candidates = $('Normalize Places and Remove Internal Duplicates').all().map(i => i.json);\nlet crmDuplicates = 0;\nconst newLeads = [];\nfor (const c of candidates) {\n  const keys = [c.placeId && `place:${c.placeId}`, c.domain && `domain:${c.domain}`, c.phoneKey && `phone:${c.phoneKey}`, c.nameCityKey && `namecity:${c.nameCityKey}`].filter(Boolean);\n  const isDuplicate = keys.some(k => existing.has(k));\n  if (isDuplicate) { crmDuplicates += 1; continue; }\n  newLeads.push({ ...c, runMetrics: { ...(c.runMetrics || {}), crmDuplicates, notionLoadErrors: crmLoadFailed ? 1 : 0, loadedCrmPages: pages.length } });\n}\nreturn newLeads.map(lead => ({ json: lead }));"
+      },
+      "name": "Find New Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          },
+          "includeUnpaired": true
+        }
+      },
+      "name": "Merge Website Context",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2720,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.website || \"https://example.invalid/\" }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "body"
+            }
+          },
+          "timeout": 12000
+        }
+      },
+      "name": "Fetch Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2208,
+        464
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const response = $json || {};\nconst statusCode = Number(response.statusCode || response.status || 0);\nconst rawBody = typeof response.body === 'string' ? response.body : (typeof response.data === 'string' ? response.data : JSON.stringify(response.body || response.data || ''));\nconst reachable = !response.error && statusCode >= 200 && statusCode < 400 && rawBody.length > 0;\nconst text = rawBody.replace(/<script[\\s\\S]*?<\\/script>/gi, ' ').replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim().slice(0, 12000);\nconst emailMatch = rawBody.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i);\nconst lower = text.toLowerCase();\nconst hasCta = /(kontakt|angebot|termin|anfrage|beratung|notdienst)/i.test(text);\nconst hasServices = /(leistungen|service|sanitär|heizung|dach|maler|elektro|reinigung|garten|landschaft)/i.test(text);\nreturn { json: { websiteReachable: reachable, websiteStatusCode: statusCode || '', websiteText: text, websiteEmail: emailMatch ? emailMatch[0] : '', websiteSignals: { hasCta, hasServices, mentionsKontakt: lower.includes('kontakt'), textLength: text.length }, websiteFetchError: response.error?.message || response.message || '' } };"
+      },
+      "name": "Parse Website Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          },
+          "includeUnpaired": true
+        }
+      },
+      "name": "Merge AI Analysis",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3504,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analysiere diesen Handwerksbetrieb für ein Webdesign-/Landingpage-/Automations-Angebot. Erfinde keine Kontaktdaten und keine Fakten, die nicht aus den Eingaben ableitbar sind. Wenn Website-Text fehlt, sage klar, dass keine belastbare Website-Analyse möglich ist.\n\nFirma: {{ $json.companyName }}\nBranche: {{ $json.trade }}\nOrt: {{ $json.city }}\nWebsite: {{ $json.website }}\nTelefon: {{ $json.phone }}\nE-Mail erkannt: {{ $json.websiteEmail || $json.email || \"\" }}\nWebsite erreichbar: {{ $json.websiteReachable }}\nWebsite-Text-Auszug: {{ ($json.websiteText || \"\").slice(0, 6000) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Du bewertest lokale Handwerksbetriebe als CRM-Research-Analyst. Antworte nur im geforderten strukturierten Format. Verwende bei Potenzialen ausschließlich Hoch, Mittel oder Niedrig. Website Score ist 0 bis 100.",
+          "maxIterations": 3,
+          "returnIntermediateSteps": false,
+          "enableStreaming": false,
+          "batching": {
+            "batchSize": 1,
+            "delayBetweenBatches": 500
+          }
+        }
+      },
+      "name": "Analyze Opportunity",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2992,
+        464
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.2,
+          "reasoningEffort": "low",
+          "timeout": 60000,
+          "maxRetries": 3
+        }
+      },
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2992,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"warumInteressant\":\"Lokaler Betrieb mit sichtbarem Bedarf.\",\"groessteWebsiteSchwaeche\":\"Unklare Leistungsseiten und schwacher CTA.\",\"landingpagePotenzial\":\"Hoch\",\"automationsPotenzial\":\"Mittel\",\"landingpageChance\":\"Separate Angebotsseite für Notdienst/Anfrage.\",\"automationsChance\":\"Kontaktformular und Anfragequalifizierung automatisieren.\",\"besterVerkaufsansatz\":\"Mehr qualifizierte Anfragen aus vorhandenen Website-Besuchern.\",\"websiteScore\":55}"
+      },
+      "name": "Opportunity Analysis Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3168,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const allowed = new Set(['Hoch', 'Mittel', 'Niedrig']);\nconst fallback = { warumInteressant: 'OpenAI-Analyse fehlgeschlagen oder nicht verfügbar.', groessteWebsiteSchwaeche: 'Keine belastbare Aussage möglich.', landingpagePotenzial: 'Niedrig', automationsPotenzial: 'Niedrig', landingpageChance: 'Keine belastbare Aussage möglich.', automationsChance: 'Keine belastbare Aussage möglich.', besterVerkaufsansatz: 'Manuell prüfen.', websiteScore: 0, openAiError: true };\nlet out = $json.output ?? $json;\nif (typeof out === 'string') { try { out = JSON.parse(out); } catch (e) { out = null; } }\nif (!out || $json.error) return { json: fallback };\nconst normalized = { ...fallback, ...out, openAiError: false };\nif (!allowed.has(normalized.landingpagePotenzial)) normalized.landingpagePotenzial = 'Niedrig';\nif (!allowed.has(normalized.automationsPotenzial)) normalized.automationsPotenzial = 'Niedrig';\nnormalized.websiteScore = Math.max(0, Math.min(100, Number(normalized.websiteScore || 0)));\nreturn { json: normalized };"
+      },
+      "name": "Normalize OpenAI Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3248,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const potentialValue = (v) => v === 'Hoch' ? 30 : v === 'Mittel' ? 20 : 10;\nconst clamp = (n) => Math.max(0, Math.min(100, Math.round(Number(n) || 0)));\nconst websiteReachable = !!$json.websiteReachable;\nconst websiteScore = websiteReachable ? clamp($json.websiteScore) : 0;\nconst landing = $json.landingpagePotenzial || 'Niedrig';\nconst automation = $json.automationsPotenzial || 'Niedrig';\nconst contactCompleteness = ($json.phone ? 5 : 0) + (($json.websiteEmail || $json.email) ? 5 : 0) + ($json.website ? 5 : 0);\nconst weaknessBonus = websiteScore < 50 ? 15 : websiteScore < 70 ? 8 : 2;\nconst opportunityScore = clamp(potentialValue(landing) + potentialValue(automation) + contactCompleteness + weaknessBonus);\nconst priority = opportunityScore >= 80 ? 'A' : opportunityScore >= 60 ? 'B' : 'C';\nconst email = $json.websiteEmail || $json.email || '';\nconst mainWeakness = $json.groessteWebsiteSchwaeche || (websiteReachable ? 'Keine belastbare Aussage möglich.' : 'Website nicht erreichbar oder nicht vorhanden.');\nconst websiteWeaknesses = [\n  `Warum interessant: ${$json.warumInteressant || 'Keine belastbare Aussage möglich.'}`,\n  `Größte Website-Schwäche: ${mainWeakness}`,\n  `Landingpage-Chance: ${$json.landingpageChance || 'Keine belastbare Aussage möglich.'}`,\n  `Automations-Chance: ${$json.automationsChance || 'Keine belastbare Aussage möglich.'}`\n].join('\\n');\nconst offerAngle = `Bester Verkaufsansatz: ${$json.besterVerkaufsansatz || 'Manuell prüfen.'}`;\nconst rich = (text) => ({ rich_text: [{ text: { content: String(text || '').slice(0, 1900) } }] });\nconst title = (text) => ({ title: [{ text: { content: String(text || '').slice(0, 1900) } }] });\nconst select = (name) => ({ select: { name } });\nconst number = (value) => ({ number: Number(value) || 0 });\nconst payload = {\n  parent: { database_id: $json.notionDatabaseId },\n  properties: {\n    'Firmenname': title($json.companyName),\n    'Branche': select($json.trade || 'Unbekannt'),\n    'Ort': rich($json.city || ''),\n    'Website': { url: $json.website || null },\n    'Telefon': { phone_number: $json.phone || null },\n    'E-Mail': { email: email || null },\n    'Website Score': number(websiteScore),\n    'Landingpage Potenzial': select(landing),\n    'Automations Potenzial': select(automation),\n    'Opportunity Score': number(opportunityScore),\n    'Priorität': select(priority),\n    'Website Schwächen': rich(websiteWeaknesses),\n    'Angebotswinkel': rich(offerAngle),\n    'Status': select('Neu')\n  }\n};\nreturn { json: { ...$json, email, websiteScore, landingpagePotenzial: landing, automationsPotenzial: automation, opportunityScore, priority, websiteWeaknesses, offerAngle, notionPayload: payload, processingErrors: ($json.openAiError ? 1 : 0) + ($json.websiteFetchError ? 1 : 0) } };"
+      },
+      "name": "Score and Prepare Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3760,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.notionPayload }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "name": "Save Lead to Notion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4032,
+        304
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepared = $('Score and Prepare Lead').all().map(i => i.json);\nconst saves = $input.all().map(i => i.json);\nconst firstMetrics = prepared[0]?.runMetrics || $('Normalize Places and Remove Internal Duplicates').first()?.json?.runMetrics || {};\nconst saveErrors = saves.filter(s => s.error || Number(s.statusCode || 200) >= 400).length;\nconst processingErrors = prepared.reduce((sum, item) => sum + Number(item.processingErrors || 0), 0);\nconst summary = {\n  workflow: 'HANDWERK OPPORTUNITY SYSTEM V1',\n  foundBusinesses: Number(firstMetrics.foundBusinesses || 0),\n  duplicates: Number(firstMetrics.internalDuplicates || 0) + Number(firstMetrics.crmDuplicates || 0),\n  newBusinesses: prepared.length,\n  aLeads: prepared.filter(item => item.priority === 'A').length,\n  errors: Number(firstMetrics.searchErrors || 0) + Number(firstMetrics.notionLoadErrors || 0) + processingErrors + saveErrors,\n  savedToNotion: saves.length - saveErrors,\n  notionSaveErrors: saveErrors,\n  generatedAt: new Date().toISOString(),\n  requiredCredentials: ['Google Places API Key', 'OpenAI', 'Notion API'],\n  openPoints: ['Workflow Settings: Notion Database ID oder URL eintragen', 'Notion-Datenbank muss mit der Integration geteilt sein', 'Notion-Feldtypen müssen zum Feldvertrag passen']\n};\nreturn [{ json: summary }];"
+      },
+      "name": "Create Run Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4288,
+        304
+      ],
+      "executeOnce": true
+    }
+  ],
+  "connections": {
+    "Manual Start": {
+      "main": [
+        [
+          {
+            "node": "Workflow Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Settings": {
+      "main": [
+        [
+          {
+            "node": "Generate Trade Search Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Trade Search Requests": {
+      "main": [
+        [
+          {
+            "node": "Merge Search Context",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search Google Places",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Search Context": {
+      "main": [
+        [
+          {
+            "node": "Normalize Places and Remove Internal Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Google Places": {
+      "main": [
+        [
+          {
+            "node": "Merge Search Context",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Normalize Places and Remove Internal Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Load Notion CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Notion CRM": {
+      "main": [
+        [
+          {
+            "node": "Find New Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find New Leads": {
+      "main": [
+        [
+          {
+            "node": "Merge Website Context",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Website Context": {
+      "main": [
+        [
+          {
+            "node": "Merge AI Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Analyze Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Website": {
+      "main": [
+        [
+          {
+            "node": "Parse Website Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Website Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Website Context",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Score and Prepare Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Normalize OpenAI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze Opportunity",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opportunity Analysis Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyze Opportunity",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize OpenAI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Merge AI Analysis",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Score and Prepare Lead": {
+      "main": [
+        [
+          {
+            "node": "Save Lead to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead to Notion": {
+      "main": [
+        [
+          {
+            "node": "Create Run Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "tags": []
+}

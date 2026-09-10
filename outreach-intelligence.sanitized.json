@@ -1,0 +1,791 @@
+{
+  "name": "OUTREACH INTELLIGENCE SYSTEM V1",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "OUTREACH INTELLIGENCE SYSTEM V1\n\nNeuer Workflow. Master V2 und Master V2 Backup werden nicht geaendert.\n\nStandardentscheidungen:\n- CRM-Titelfeld Firma wird als Firmenname verwendet.\n- Es werden nur Datensaetze mit Status Neu verarbeitet.\n- Fehlende E-Mail stoppt nicht, weil keine E-Mail versendet wird.\n- Fehlende Website oder fehlender Firmenname setzt Status Pruefung noetig.\n- Notion-CRM-Felder fuer Betreff, E-Mail Entwurf, Angebotswinkel, Erstellungsdatum und Fehlerlog wurden vorbereitet.\n- Der Workflow erstellt Entwuerfe und speichert sie im CRM; kein automatischer Versand.",
+        "height": 320,
+        "width": 560,
+        "color": 3
+      },
+      "name": "Sticky Note 3a81d39b",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        224
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "Manual Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        128,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function pagesFromNode(nodeName) { try { return $(nodeName).all().map(i => i.json).filter(p => p && p.properties); } catch (error) { return []; } }\nfunction prop(page, name) { return page.properties?.[name]; }\nfunction title(page, names) { for (const name of names) { const p = prop(page, name); const value = p?.title?.map(t => t.plain_text || t.text?.content || '').join('').trim(); if (value) return value; } return ''; }\nfunction rich(page, names) { for (const name of names) { const p = prop(page, name); const value = p?.rich_text?.map(t => t.plain_text || t.text?.content || '').join('').trim(); if (value) return value; } return ''; }\nfunction email(page, names) { for (const name of names) { const v = prop(page, name)?.email; if (v) return v; } return ''; }\nfunction url(page, names) { for (const name of names) { const v = prop(page, name)?.url; if (v) return v; } return ''; }\nfunction phone(page, names) { for (const name of names) { const v = prop(page, name)?.phone_number; if (v) return v; } return ''; }\nfunction select(page, names) { for (const name of names) { const v = prop(page, name)?.select?.name || prop(page, name)?.status?.name; if (v) return v; } return ''; }\nfunction number(page, names) { for (const name of names) { const v = prop(page, name)?.number; if (v !== undefined && v !== null) return v; } return null; }\nfunction keyFor(record) { const websiteKey = (record.website || '').replace(/^https?:\\/\\//, '').replace(/^www\\./, '').replace(/\\/$/, '').toLowerCase(); if (websiteKey) return 'website:' + websiteKey; if (record.email) return 'email:' + record.email.toLowerCase(); return 'firma:' + [record.companyName, record.city].join('|').toLowerCase().replace(/\\s+/g, ' ').trim(); }\nfunction richText(content) { return [{ type: 'text', text: { content: String(content || '').slice(0, 1900) } }]; }\nfunction statusUpdate(pageId, status, reason) { const now = new Date().toISOString(); return { pageId, notionUpdateBody: { properties: { Status: { select: { name: status } }, Fehlergrund: { rich_text: richText(reason) }, 'Workflow Log': { rich_text: richText('OUTREACH INTELLIGENCE SYSTEM V1 | ' + status + ' | ' + reason) }, 'Bearbeitet am': { date: { start: now } } } } }; }\nfunction normalize(page) { return { pageId: page.id, pageUrl: page.url || '', companyName: title(page, ['Firmenname', 'Firma', 'Name']), industry: rich(page, ['Branche']), city: rich(page, ['Ort']), website: url(page, ['Website', 'Quelle / Fundstelle']), contactPerson: rich(page, ['Ansprechpartner']), email: email(page, ['E-Mail', 'Email']), phone: phone(page, ['Telefon']), status: select(page, ['Status']), websiteScore: number(page, ['Website Score', 'Website-Score']), landingpagePotential: select(page, ['Landingpage Potenzial', 'Landingpage-Potenzial']) || rich(page, ['Landingpage Potenzial']), automationPotential: select(page, ['Automations Potenzial', 'Automations-Potenzial']) || rich(page, ['Automations Potenzial']), websiteWeaknesses: rich(page, ['Website Schwächen', 'größte Website-Schwächen', 'Hauptschwachstelle']), offerAngle: rich(page, ['Angebotswinkel', 'empfohlener Angebotswinkel', 'Empfohlene Lösung', 'Was verkaufen']), existingDraft: rich(page, ['E-Mail Entwurf', 'Akquise-Mail']), existingSubject: rich(page, ['Betreff']), notes: rich(page, ['Notizen', 'Audit', 'Verbesserungspotenziale']) }; }\nconst allPages = pagesFromNode('Fetch All CRM Pages for Duplicate Check');\nconst allRecords = allPages.map(normalize);\nconst newPages = allPages.filter(page => normalize(page).status === 'Neu');\nconst counts = new Map();\nfor (const record of allRecords) { const key = keyFor(record); counts.set(key, (counts.get(key) || 0) + 1); }\nconst items = [];\nfor (const page of newPages) { const record = normalize(page); const reasons = []; if ((record.status || '').trim() !== 'Neu') reasons.push('Status ist nicht Neu'); if (!record.companyName) reasons.push('Firmenname/Firma fehlt'); if (!record.website) reasons.push('Website fehlt'); if (record.existingDraft || record.existingSubject) reasons.push('Entwurf oder Betreff existiert bereits'); const dupCount = counts.get(keyFor(record)) || 0; if (dupCount > 1) reasons.push('Doppelter Betrieb im CRM erkannt (' + dupCount + ' Datensätze)'); const warnings = []; if (!record.email) warnings.push('E-Mail fehlt; Entwurf wird trotzdem erstellt, weil kein automatischer Versand erfolgt'); const base = { ...record, crmDatabaseId: '<REDACTED_ID>', duplicateCount: dupCount, warnings, processedAt: new Date().toISOString() }; if (reasons.length) { const update = statusUpdate(record.pageId, 'Prüfung nötig', reasons.join('; ')); items.push({ json: { ...base, action: 'skip_update', skipReason: reasons.join('; '), ...update } }); } else { items.push({ json: { ...base, action: 'process', skipReason: '', duplicateKey: keyFor(record) } }); } }\nreturn items;"
+      },
+      "name": "Build Processing Queue and Duplicate Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function items(nodeName) { try { return $(nodeName).all().map(i => i.json); } catch (error) { return []; } }\nconst queue = items('Build Processing Queue and Duplicate Report'); const draftWrites = items('Mark Draft Notion Write'); const aiWrites = items('Mark AI Failure Notion Write'); const skipWrites = items('Mark Skip Notion Write'); const allWrites = [...draftWrites, ...aiWrites, ...skipWrites]; const errors = [];\nfor (const item of queue) { if (item.skipReason) errors.push({ node: 'Build Processing Queue and Duplicate Report', record: item.companyName || item.pageId, message: item.skipReason, time: new Date().toISOString() }); }\nfor (const item of allWrites) { if (item.status === 'notion_failed') errors.push({ node: item.resultType === 'draft' ? 'Update Notion with Draft' : item.resultType === 'ai_failure' ? 'Update Notion with AI Failure' : 'Update Notion with Skip Reason', record: item.companyName || item.pageId, message: item.error || 'Notion Schreibfehler', time: new Date().toISOString() }); }\nfor (const item of aiWrites) { if (item.status === 'ai_failure_logged') errors.push({ node: 'OpenAI Lead Draft Generator', record: item.companyName || item.pageId, message: item.error || 'KI Fehler', time: new Date().toISOString() }); }\nreturn [{ json: { workflow: 'OUTREACH INTELLIGENCE SYSTEM V1', completedAt: new Date().toISOString(), loadedNewLeads: queue.length, processedLeads: queue.filter(i => i.action === 'process').length, skippedLeads: queue.filter(i => i.action !== 'process').length, draftsCreated: draftWrites.filter(i => i.status === 'draft_created').length, aiFailures: aiWrites.filter(i => i.status === 'ai_failure_logged').length, notionWriteFailures: allWrites.filter(i => i.status === 'notion_failed').length, errors } }];"
+      },
+      "name": "Create Run Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        768
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.action }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "process"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Should Create Draft?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1920,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.website }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "name": "Fetch Website HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2224,
+        192
+      ],
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lead = $('Process One Lead').item.json;\nconst response = $input.item.json || {};\nconst rawHtml = String(response.body || response.data || '').slice(0, 60000);\nconst statusCode = Number(response.statusCode || 0);\nfunction strip(html) { return html.replace(/<script[\\s\\S]*?<\\/script>/gi, ' ').replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim(); }\nfunction match(re) { const m = rawHtml.match(re); return m ? m[1].replace(/\\s+/g, ' ').trim() : ''; }\nconst text = strip(rawHtml).slice(0, 9000);\nconst lower = rawHtml.toLowerCase();\nconst signals = { hasViewport: lower.includes('name=\"viewport') || lower.includes(\"name='viewport\"), hasForm: lower.includes('<form') || lower.includes('kontaktformular'), hasCta: /angebot|anfrage|kontakt|termin|beratung|rückruf/i.test(text), hasTrust: /bewertung|referenz|zertifikat|meister|innung|kunden|partner|google/i.test(text), hasLocalSeo: Boolean(lead.city && text.toLowerCase().includes(String(lead.city).toLowerCase().split(/[\\/,-]/)[0].trim())), looksModern: /lazy|schema.org|json-ld|webp|srcset|font-display|module/i.test(rawHtml) };\nconst missing = Object.entries(signals).filter(([, value]) => !value).map(([key]) => key);\nconst aiInput = { lead: { companyName: lead.companyName, industry: lead.industry, city: lead.city, website: lead.website, contactPerson: lead.contactPerson, email: lead.email, phone: lead.phone, websiteScore: lead.websiteScore, existingLandingpagePotential: lead.landingpagePotential, existingAutomationPotential: lead.automationPotential, existingWebsiteWeaknesses: lead.websiteWeaknesses, existingOfferAngle: lead.offerAngle, notes: lead.notes, warnings: lead.warnings }, websiteEvidence: { statusCode, title: match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i), description: match(/<meta[^>]+name=[\"']description[\"'][^>]+content=[\"']([^\"']*)[\"']/i), textSample: text, signals, missingSignals: missing }, rules: { language: 'Deutsch', tone: 'professionell, seriös, ruhig', maxEmailWords: 150, noInventedFacts: true, noAutomaticSending: true } };\nreturn { json: { ...lead, websiteFetchStatusCode: statusCode, websiteSignals: signals, websiteMissingSignals: missing, websiteTextSample: text.slice(0, 2000), aiInput } };"
+      },
+      "name": "Analyze Website Evidence",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2528,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json.aiInput) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Du bist ein seriöser deutscher B2B-Outreach-Stratege. Erstelle ausschließlich einen E-Mail-Entwurf, versende nichts und nutze nur die übergebenen Daten. Keine erfundenen Informationen, keine aggressiven Verkaufstaktiken, keine Übertreibungen. Die E-Mail darf maximal 150 Wörter haben. Prüfe Landingpage-Potenzial anhand Mobile Optimierung, Conversion, Kontaktformular, Vertrauenselemente, lokale SEO, Nutzerführung und Modernität. Prüfe Automations-Potenzial anhand Lead-Erfassung, CRM, Follow-up, E-Mail-Automatisierung, Benachrichtigungen, Angebotsprozess und Terminverwaltung. Antworte strikt im geforderten JSON-Schema.",
+          "maxIterations": 2,
+          "returnIntermediateSteps": false,
+          "passthroughBinaryImages": false,
+          "enableStreaming": false,
+          "batching": {
+            "batchSize": 1,
+            "delayBetweenBatches": 0
+          }
+        }
+      },
+      "name": "OpenAI Lead Draft Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2832,
+        192
+      ],
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.2,
+          "reasoningEffort": "low",
+          "timeout": 90000,
+          "maxRetries": 3
+        }
+      },
+      "name": "OpenAI gpt-5-mini Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2528,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\"subject\":\"Kurzer Betreff\",\"emailDraft\":\"Guten Tag ...\",\"shortSummary\":\"Kurzfassung der Analyse\",\"mainArgument\":\"Hauptargument\",\"callToAction\":\"Vorgeschlagene Call-To-Action\",\"offerAngle\":\"Angebotswinkel\",\"landingpagePotential\":\"niedrig|mittel|hoch plus Begründung\",\"automationPotential\":\"niedrig|mittel|hoch plus Begründung\",\"websiteWeaknesses\":\"datenbasierte Schwächen\",\"websiteScore\":6}",
+        "autoFix": true
+      },
+      "name": "Outreach Draft JSON Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2832,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lead = $('Analyze Website Evidence').item.json;\nconst item = $input.item.json || {};\nfunction text(v) { return String(v || '').trim(); }\nfunction limitWords(value, maxWords) { const words = text(value).split(/\\s+/).filter(Boolean); return words.length > maxWords ? words.slice(0, maxWords).join(' ') : words.join(' '); }\nfunction parseOutput(raw) { if (!raw) return null; if (typeof raw === 'object') return raw; let cleaned = String(raw).trim(); const fence = String.fromCharCode(96) + String.fromCharCode(96) + String.fromCharCode(96); if (cleaned.startsWith(fence)) cleaned = cleaned.replace(fence + 'json', '').replace(fence, '').replace(fence, '').trim(); return JSON.parse(cleaned); }\ntry { if (lead.simulateOpenAiFailure || item.error || item.message?.includes?.('error')) throw new Error(item.error?.message || item.message || 'OpenAI Fehler'); const parsed = parseOutput(item.output || item.text || item.response || item); if (!parsed || !parsed.emailDraft || !parsed.subject) throw new Error('OpenAI Antwort enthaelt keinen Betreff oder Entwurf'); return { json: { ...lead, aiStatus: 'success', subject: text(parsed.subject).slice(0, 180), emailDraft: limitWords(parsed.emailDraft, 150), shortSummary: text(parsed.shortSummary).slice(0, 1000), mainArgument: text(parsed.mainArgument).slice(0, 1000), callToAction: text(parsed.callToAction).slice(0, 500), offerAngle: text(parsed.offerAngle || lead.offerAngle).slice(0, 1000), landingpagePotentialFinal: text(parsed.landingpagePotential).slice(0, 1000), automationPotentialFinal: text(parsed.automationPotential).slice(0, 1000), websiteWeaknessesFinal: text(parsed.websiteWeaknesses || lead.websiteWeaknesses).slice(0, 1500), websiteScoreFinal: Number(parsed.websiteScore ?? lead.websiteScore ?? 0) } }; } catch (error) { return { json: { ...lead, aiStatus: 'failed', aiError: error.message || String(error) } }; }"
+      },
+      "name": "Mark AI Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.aiStatus }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "success"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "AI Result Successful?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3424,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lead = $input.item.json;\nfunction rich(content) { return [{ type: 'text', text: { content: String(content || '').slice(0, 1900) } }]; }\nconst now = new Date().toISOString();\nconst log = ['Entwurf erstellt', lead.warnings?.join('; ') || '', 'Website HTTP: ' + (lead.websiteFetchStatusCode || 'unbekannt')].filter(Boolean).join(' | ');\nreturn { json: { ...lead, notionWriteType: 'draft', notionUpdateBody: { properties: { Status: { select: { name: 'Entwurf erstellt' } }, Betreff: { rich_text: rich(lead.subject) }, 'E-Mail Entwurf': { rich_text: rich(lead.emailDraft) }, 'Akquise-Mail': { rich_text: rich(lead.emailDraft) }, Kurzfassung: { rich_text: rich(lead.shortSummary) }, Hauptargument: { rich_text: rich(lead.mainArgument) }, CTA: { rich_text: rich(lead.callToAction) }, Angebotswinkel: { rich_text: rich(lead.offerAngle) }, 'empfohlener Angebotswinkel': { rich_text: rich(lead.offerAngle) }, Erstellungsdatum: { date: { start: now.slice(0, 10) } }, 'Bearbeitet am': { date: { start: now } }, 'Website Schwächen': { rich_text: rich(lead.websiteWeaknessesFinal) }, 'Landingpage Potenzial': { rich_text: rich(lead.landingpagePotentialFinal) }, 'Automations Potenzial': { rich_text: rich(lead.automationPotentialFinal) }, Fehlergrund: { rich_text: [] }, 'Workflow Log': { rich_text: rich(log) } } } } };"
+      },
+      "name": "Build Draft Notion Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3728,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lead = $('Build Draft Notion Update').item.json; const res = $input.item.json || {}; const statusCode = Number(res.statusCode || 0); const failed = Boolean(res.error) || (statusCode >= 400 && statusCode !== 0); return { json: { pageId: lead.pageId, companyName: lead.companyName, resultType: 'draft', status: failed ? 'notion_failed' : 'draft_created', statusCode, error: failed ? (res.message || res.error?.message || 'Notion Schreibfehler') : '' } };"
+      },
+      "name": "Mark Draft Notion Write",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Process One Lead",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1632,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lead = $input.item.json; function rich(content) { return [{ type: 'text', text: { content: String(content || '').slice(0, 1900) } }]; } const now = new Date().toISOString(); const reason = 'OpenAI Fehler nach 3 Versuchen: ' + (lead.aiError || 'unbekannt'); return { json: { ...lead, notionWriteType: 'ai_failure', notionUpdateBody: { properties: { Status: { select: { name: 'KI Fehler' } }, Fehlergrund: { rich_text: rich(reason) }, 'Workflow Log': { rich_text: rich('OUTREACH INTELLIGENCE SYSTEM V1 | KI Fehler | ' + reason) }, 'Bearbeitet am': { date: { start: now } } } } } };"
+      },
+      "name": "Build AI Failure Notion Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3728,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lead = $('Build AI Failure Notion Update').item.json; const res = $input.item.json || {}; const statusCode = Number(res.statusCode || 0); const failed = Boolean(res.error) || (statusCode >= 400 && statusCode !== 0); return { json: { pageId: lead.pageId, companyName: lead.companyName, resultType: 'ai_failure', status: failed ? 'notion_failed' : 'ai_failure_logged', statusCode, error: failed ? (res.message || res.error?.message || 'Notion Schreibfehler') : lead.aiError } };"
+      },
+      "name": "Mark AI Failure Notion Write",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lead = $('Process One Lead').item.json; const res = $input.item.json || {}; const statusCode = Number(res.statusCode || 0); const failed = Boolean(res.error) || (statusCode >= 400 && statusCode !== 0); return { json: { pageId: lead.pageId, companyName: lead.companyName, resultType: 'skip', status: failed ? 'notion_failed' : 'skipped_logged', skipReason: lead.skipReason, statusCode, error: failed ? (res.message || res.error?.message || 'Notion Schreibfehler') : lead.skipReason } };"
+      },
+      "name": "Mark Skip Notion Write",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2528,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "name": "Daily CRM Scan 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": "<REDACTED_ID>",
+        "returnAll": true,
+        "simple": false,
+        "options": {}
+      },
+      "name": "Fetch All CRM Pages for Duplicate Check",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": "<REDACTED_ID>",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|select",
+              "type": "select",
+              "selectValue": "Entwurf erstellt"
+            },
+            {
+              "key": "Betreff|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.subject || '' }}"
+            },
+            {
+              "key": "E-Mail Entwurf|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.emailDraft || '' }}"
+            },
+            {
+              "key": "Akquise-Mail|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.emailDraft || '' }}"
+            },
+            {
+              "key": "Kurzfassung|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.shortSummary || '' }}"
+            },
+            {
+              "key": "Hauptargument|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.mainArgument || '' }}"
+            },
+            {
+              "key": "CTA|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.callToAction || '' }}"
+            },
+            {
+              "key": "Angebotswinkel|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.offerAngle || '' }}"
+            },
+            {
+              "key": "empfohlener Angebotswinkel|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.offerAngle || '' }}"
+            },
+            {
+              "key": "Erstellungsdatum|date",
+              "type": "date",
+              "includeTime": false,
+              "date": "={{ $now.toISODate() }}"
+            },
+            {
+              "key": "Bearbeitet am|date",
+              "type": "date",
+              "date": "={{ $now.toISO() }}"
+            },
+            {
+              "key": "Website Schwächen|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.websiteWeaknessesFinal || '' }}"
+            },
+            {
+              "key": "Landingpage Potenzial|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.landingpagePotentialFinal || '' }}"
+            },
+            {
+              "key": "Automations Potenzial|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.automationPotentialFinal || '' }}"
+            },
+            {
+              "key": "Fehlergrund|rich_text",
+              "type": "rich_text"
+            },
+            {
+              "key": "Workflow Log|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ 'Entwurf erstellt | Website HTTP: ' + ($json.websiteFetchStatusCode || 'unbekannt') + (($json.warnings || []).length ? ' | ' + $json.warnings.join('; ') : '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Update Notion with Draft",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        4032,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": "<REDACTED_ID>",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|select",
+              "type": "select",
+              "selectValue": "KI Fehler"
+            },
+            {
+              "key": "Fehlergrund|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ 'OpenAI Fehler nach 3 Versuchen: ' + ($json.aiError || 'unbekannt') }}"
+            },
+            {
+              "key": "Workflow Log|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ 'OUTREACH INTELLIGENCE SYSTEM V1 | KI Fehler | ' + ($json.aiError || 'unbekannt') }}"
+            },
+            {
+              "key": "Bearbeitet am|date",
+              "type": "date",
+              "date": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Update Notion with AI Failure",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        4032,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": "<REDACTED_ID>",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|select",
+              "type": "select",
+              "selectValue": "Prüfung nötig"
+            },
+            {
+              "key": "Fehlergrund|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ $json.skipReason || 'Prüfung nötig' }}"
+            },
+            {
+              "key": "Workflow Log|rich_text",
+              "type": "rich_text",
+              "textContent": "={{ 'OUTREACH INTELLIGENCE SYSTEM V1 | Prüfung nötig | ' + ($json.skipReason || '') }}"
+            },
+            {
+              "key": "Bearbeitet am|date",
+              "type": "date",
+              "date": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Update Notion with Skip Reason",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2224,
+        528
+      ]
+    }
+  ],
+  "connections": {
+    "Build Processing Queue and Duplicate Report": {
+      "main": [
+        [
+          {
+            "node": "Process One Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Create Draft?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Website HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Notion with Skip Reason",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Website HTML": {
+      "main": [
+        [
+          {
+            "node": "Analyze Website Evidence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Website Evidence": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Lead Draft Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Lead Draft Generator": {
+      "main": [
+        [
+          {
+            "node": "Mark AI Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI gpt-5-mini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "OpenAI Lead Draft Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Outreach Draft JSON Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outreach Draft JSON Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "OpenAI Lead Draft Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark AI Result": {
+      "main": [
+        [
+          {
+            "node": "AI Result Successful?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Result Successful?": {
+      "main": [
+        [
+          {
+            "node": "Build Draft Notion Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build AI Failure Notion Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Draft Notion Write": {
+      "main": [
+        [
+          {
+            "node": "Process One Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process One Lead": {
+      "main": [
+        [
+          {
+            "node": "Create Run Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Should Create Draft?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark AI Failure Notion Write": {
+      "main": [
+        [
+          {
+            "node": "Process One Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Skip Notion Write": {
+      "main": [
+        [
+          {
+            "node": "Process One Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Start": {
+      "main": [
+        [
+          {
+            "node": "Fetch All CRM Pages for Duplicate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily CRM Scan 09:00": {
+      "main": [
+        [
+          {
+            "node": "Fetch All CRM Pages for Duplicate Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch All CRM Pages for Duplicate Check": {
+      "main": [
+        [
+          {
+            "node": "Build Processing Queue and Duplicate Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Draft Notion Update": {
+      "main": [
+        [
+          {
+            "node": "Update Notion with Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Notion with Draft": {
+      "main": [
+        [
+          {
+            "node": "Mark Draft Notion Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Failure Notion Update": {
+      "main": [
+        [
+          {
+            "node": "Update Notion with AI Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Notion with AI Failure": {
+      "main": [
+        [
+          {
+            "node": "Mark AI Failure Notion Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Notion with Skip Reason": {
+      "main": [
+        [
+          {
+            "node": "Mark Skip Notion Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "tags": []
+}

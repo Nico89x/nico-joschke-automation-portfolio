@@ -1,0 +1,640 @@
+[
+  {
+    "name": "NOVAWERK - Lead Intake System V1",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "novawerk-lead",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "https://novawerk-systeme.de,https://www.novawerk-systeme.de,http://localhost:4173,http://127.0.0.1:4173"
+          }
+        },
+        "name": "Website Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1180,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $json.body ?? $json;\nconst clean = (value, max = 500) => String(value ?? '').replace(/[\\u0000-\\u001F\\u007F]/g, ' ').replace(/\\s+/g, ' ').trim().slice(0, max);\nconst name = clean(input.name, 120);\nconst company = clean(input.company, 160);\nconst email = clean(input.email, 254).toLowerCase();\nconst phone = clean(input.phone, 40);\nconst website = clean(input.website, 300);\nconst interest = clean(input.interest ?? input.anliegen, 200);\nconst message = clean(input.message ?? input.nachricht, 3000);\nconst privacy = input.privacy === true || input.privacy === 'true' || input.privacy === 'on';\nconst honeypot = clean(input.websiteConfirm, 200);\nconst startedAt = Number(input.formStartedAt || 0);\nconst submittedAt = clean(input.submittedAt, 60);\nconst receivedAt = new Date().toISOString();\nconst missingFields = [];\nif (!name) missingFields.push('Name');\nif (!email) missingFields.push('E-Mail');\nif (!interest) missingFields.push('Anliegen');\nif (!privacy) missingFields.push('DSGVO-Zustimmung');\nconst emailValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);\nlet errorCode = '';\nif (honeypot) errorCode = 'spam_detected';\nelse if (missingFields.length) errorCode = 'missing_required_fields';\nelse if (!emailValid) errorCode = 'invalid_email';\nelse if (startedAt && Date.now() - startedAt < 1500) errorCode = 'submitted_too_fast';\nlet leadScore = 0;\nif (website) leadScore += 10;\nif (company) leadScore += 10;\nif (interest.length >= 8) leadScore += 20;\nif (/automat|prozess/i.test(interest + ' ' + message)) leadScore += 25;\nif (/landingpage|website|webseite/i.test(interest + ' ' + message)) leadScore += 20;\nif (phone) leadScore += 10;\nif (message.length >= 40) leadScore += 5;\nleadScore = Math.min(100, leadScore);\nconst priority = leadScore >= 80 ? 'A-Lead' : leadScore >= 50 ? 'B-Lead' : 'C-Lead';\nconst hash = [...email].reduce((value, char) => ((value << 5) - value + char.charCodeAt(0)) | 0, 0);\nconst datePart = receivedAt.slice(0, 10).replace(/-/g, '');\nconst leadId = `NW-${datePart}-${Math.abs(hash).toString(36).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;\nconst followUpDate = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);\nconst nextStep = priority === 'A-Lead' ? 'Innerhalb eines Werktags persönlich kontaktieren' : priority === 'B-Lead' ? 'Bedarf prüfen und Erstgespräch anbieten' : 'Anfrage sichten und Rückmeldung vorbereiten';\nconst offerPotential = /automat/i.test(interest + ' ' + message) ? 'Automation & Betreuung' : /website|webseite|landingpage/i.test(interest + ' ' + message) ? 'Handwerker Landingpage' : 'Lead-System / Beratung';\nreturn [{ json: { valid: !errorCode, errorCode, missingFields, leadId, createdAt: submittedAt || receivedAt, receivedAt, name, company, email, phone, website, industry: clean(input.industry ?? input.branche, 120), interest, message, privacy, source: 'Website', pageUrl: clean(input.pageUrl, 500), leadScore, priority, status: 'Neu', offerPotential, nextStep, followUpDate } }];"
+        },
+        "name": "Lead validieren & bewerten",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -940,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.valid }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "name": "Lead gültig?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -700,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.notion.com/v1/databases/NOVAWERK_NOTION_DATABASE_ID/query",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "notionApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ { filter: { or: [ { property: 'E-Mail', email: { equals: $json.email } }, ...($json.website ? [{ property: 'Website', url: { equals: $json.website } }] : []), ...($json.company ? [{ property: 'Firma / Name', title: { equals: $json.company } }] : []) ] }, page_size: 10 } }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "Notion - Duplikate suchen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -460,
+          -100
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const lead = $('Lead validieren & bewerten').item.json;\nconst response = $json ?? {};\nconst apiFailed = Boolean(response.error || response.statusCode >= 400 || (!Array.isArray(response.results) && response.object === 'error'));\nif (apiFailed) return [{ json: { ...lead, storageReady: false, storageError: response.message || 'Notion-Duplikatprüfung fehlgeschlagen' } }];\nconst matches = Array.isArray(response.results) ? response.results : [];\nconst duplicate = matches.length > 0;\nconst duplicatePageId = duplicate ? matches[0].id : '';\nconst rich = (text, max = 1900) => [{ type: 'text', text: { content: String(text || '').slice(0, max) } }];\nconst properties = {\n  'Firma / Name': { title: rich(lead.company || lead.name) },\n  'Lead ID': { rich_text: rich(lead.leadId) },\n  'Erstellungsdatum': { date: { start: lead.createdAt } },\n  'Ansprechpartner': { rich_text: rich(lead.name) },\n  'E-Mail': { email: lead.email },\n  'Telefon': { phone_number: lead.phone || null },\n  'Website': { url: lead.website || null },\n  'Branche': { rich_text: rich(lead.industry) },\n  'Anliegen': { rich_text: rich(lead.interest) },\n  'Nachricht': { rich_text: rich(lead.message) },\n  'Lead-Quelle': { select: { name: 'Website' } },\n  'Status': { select: { name: 'Neu' } },\n  'Priorität': { select: { name: lead.priority } },\n  'Lead Score': { number: lead.leadScore },\n  'Angebotspotenzial': { rich_text: rich(lead.offerPotential) },\n  'Nächster Schritt': { rich_text: rich(lead.nextStep) },\n  'Follow-up Datum': { date: { start: lead.followUpDate } },\n  'Notizen': { rich_text: rich(duplicate ? `Erneute Anfrage am ${lead.receivedAt}. Vorhandener Datensatz aktualisiert.` : `Erstellt durch Lead Intake am ${lead.receivedAt}.`) },\n  'Angebot erstellt': { checkbox: false },\n  'Angebot versendet': { checkbox: false },\n  'Kunde': { checkbox: false }\n};\nreturn [{ json: { ...lead, storageReady: true, duplicate, duplicatePageId, notionCreateBody: { parent: { database_id: 'NOVAWERK_NOTION_DATABASE_ID' }, properties }, notionUpdateBody: { properties } } }];"
+        },
+        "name": "Duplikat + CRM-Payload",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -220,
+          -100
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.storageReady }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "name": "CRM erreichbar?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          20,
+          -100
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.duplicate }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "name": "Duplikat?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          260,
+          -180
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ 'https://api.notion.com/v1/pages/' + $json.duplicatePageId }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "notionApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.notionUpdateBody }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "Notion - Lead aktualisieren",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          500,
+          -260
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.notion.com/v1/pages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "notionApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.notionCreateBody }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "Notion - Lead anlegen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          500,
+          -80
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const lead = $('Duplikat + CRM-Payload').item.json;\nconst response = $json ?? {};\nconst stored = Boolean(response.id) && !response.error;\nreturn [{ json: { ...lead, stored, notionPageId: response.id || lead.duplicatePageId || '', storageError: stored ? '' : (response.message || 'CRM-Speicherung fehlgeschlagen') } }];"
+        },
+        "name": "Speicherung prüfen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          740,
+          -180
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.stored }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "name": "Gespeichert?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          960,
+          -180
+        ]
+      },
+      {
+        "parameters": {
+          "fromEmail": "portfolio@example.com",
+          "toEmail": "portfolio@example.com",
+          "subject": "={{ 'Neuer NOVAWERK Lead · ' + ($json.company || $json.name) }}",
+          "emailFormat": "text",
+          "text": "={{ 'Neuer Lead\\n\\nFirma: ' + ($json.company || '–') + '\\nName: ' + $json.name + '\\nE-Mail: ' + $json.email + '\\nTelefon: ' + ($json.phone || '–') + '\\nAnliegen: ' + $json.interest + '\\nNachricht: ' + ($json.message || '–') + '\\nWebsite: ' + ($json.website || '–') + '\\nZeitpunkt: ' + $json.receivedAt + '\\nLead Score: ' + $json.leadScore + '/100\\nPriorität: ' + $json.priority + '\\nLead ID: ' + $json.leadId }}",
+          "options": {
+            "appendAttribution": false,
+            "replyTo": "={{ $json.email }}"
+          }
+        },
+        "name": "Interne Benachrichtigung",
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          1220,
+          -420
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "fromEmail": "portfolio@example.com",
+          "toEmail": "portfolio@example.com",
+          "subject": "Ihre Anfrage bei NOVAWERK ist eingegangen",
+          "emailFormat": "text",
+          "text": "Vielen Dank für Ihre Anfrage. Wir haben Ihre Nachricht erhalten und melden uns in der Regel innerhalb von 24 Stunden mit einer ersten Einschätzung zurück.\n\nMit freundlichen Grüßen\nNOVAWERK\nDigitale Systeme für Handwerksbetriebe",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "name": "Neutrale Eingangsbestätigung",
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          1220,
+          -260
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "chatId": "<REDACTED_ID>",
+          "text": "={{ 'Neuer NOVAWERK Lead: ' + ($json.company || $json.name) + ' · ' + $json.interest + ' · ' + $json.priority }}",
+          "additionalFields": {}
+        },
+        "name": "Optional - Telegram intern",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1220,
+          -100
+        ],
+        "disabled": true,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { success: true, message: 'Vielen Dank. Ihre Anfrage ist bei NOVAWERK eingegangen.', leadId: $json.leadId } }}",
+          "options": {
+            "responseCode": 200
+          }
+        },
+        "name": "Website - Erfolg",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          1220,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { success: false, message: 'Bitte prüfen Sie die Pflichtfelder und versuchen Sie es erneut.', errorCode: $json.errorCode, missingFields: $json.missingFields } }}",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "name": "Website - Validierungsfehler",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          -460,
+          180
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { success: false, message: 'Die Anfrage konnte vorübergehend nicht sicher gespeichert werden. Bitte versuchen Sie es erneut.', errorCode: 'crm_unavailable' } }}",
+          "options": {
+            "responseCode": 503
+          }
+        },
+        "name": "Website - Speicherfehler",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          1220,
+          260
+        ]
+      },
+      {
+        "parameters": {
+          "fromEmail": "portfolio@example.com",
+          "toEmail": "portfolio@example.com",
+          "subject": "NOVAWERK Workflow-Fehler · Lead konnte nicht gespeichert werden",
+          "emailFormat": "text",
+          "text": "={{ 'Interner Fehler im Lead Intake System\\n\\nLead ID: ' + ($json.leadId || 'nicht erzeugt') + '\\nName: ' + ($json.name || '–') + '\\nE-Mail: ' + ($json.email || '–') + '\\nFehler: ' + ($json.storageError || $json.errorCode || 'Unbekannter Speicherfehler') + '\\nZeitpunkt: ' + new Date().toISOString() }}",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "name": "Interne Fehlermeldung",
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          1220,
+          420
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "content": "## Vor Aktivierung\n1. Notion-Datenbank nach Schema anlegen und für die Integration freigeben.\n2. `NOVAWERK_NOTION_DATABASE_ID` in beiden Notion-URLs und im Code ersetzen.\n3. Notion-Credential an allen Notion-HTTP-Nodes auswählen.\n4. SMTP-Credential, Absender und internen Empfänger eintragen.\n5. Telegram optional konfigurieren und aktivieren.\n6. Erst Test-Webhook, dann Production-Webhook verwenden.\n\nDer Workflow bleibt nach dem Import deaktiviert.",
+          "height": 330,
+          "width": 520
+        },
+        "name": "Einrichtung & Sicherheit",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -1180,
+          -520
+        ]
+      }
+    ],
+    "connections": {
+      "Website Webhook": {
+        "main": [
+          [
+            {
+              "node": "Lead validieren & bewerten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Lead validieren & bewerten": {
+        "main": [
+          [
+            {
+              "node": "Lead gültig?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Lead gültig?": {
+        "main": [
+          [
+            {
+              "node": "Notion - Duplikate suchen",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Website - Validierungsfehler",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Notion - Duplikate suchen": {
+        "main": [
+          [
+            {
+              "node": "Duplikat + CRM-Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Duplikat + CRM-Payload": {
+        "main": [
+          [
+            {
+              "node": "CRM erreichbar?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CRM erreichbar?": {
+        "main": [
+          [
+            {
+              "node": "Duplikat?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Website - Speicherfehler",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Interne Fehlermeldung",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Duplikat?": {
+        "main": [
+          [
+            {
+              "node": "Notion - Lead aktualisieren",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Notion - Lead anlegen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Notion - Lead aktualisieren": {
+        "main": [
+          [
+            {
+              "node": "Speicherung prüfen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Notion - Lead anlegen": {
+        "main": [
+          [
+            {
+              "node": "Speicherung prüfen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Speicherung prüfen": {
+        "main": [
+          [
+            {
+              "node": "Gespeichert?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gespeichert?": {
+        "main": [
+          [
+            {
+              "node": "Interne Benachrichtigung",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Neutrale Eingangsbestätigung",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Optional - Telegram intern",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Website - Erfolg",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Website - Speicherfehler",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Interne Fehlermeldung",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "Europe/Berlin",
+      "saveDataErrorExecution": "all",
+      "saveDataSuccessExecution": "all",
+      "saveManualExecutions": true
+    },
+    "nodeGroups": [],
+    "activeVersionId": null,
+    "versionCounter": 1,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Portfolio von Nico Joschke: n8n, Workflow Automation, APIs und AI Automation mit nachvollziehbaren technischen Nachweisen." />
+    <title>Nico Joschke – Automation Portfolio</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Zur Startseite">NJ<span>/automation</span></a>
+      <nav aria-label="Hauptnavigation">
+        <a href="#projekte">Projekte</a>
+        <a href="#profil">Profil</a>
+        <a class="nav-cta" href="Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf">Kurzprofil als PDF</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Workflow Automation · AI Automation · Integrationen</p>
+          <h1 id="hero-title">Automationen, die nicht nur laufen – sondern nachvollziehbar gebaut sind.</h1>
+          <p class="lede">Ich entwickle n8n-Workflows mit klarer Datenlogik, API-Anbindungen, Fehlerpfaden und menschlichen Freigaben. Die Beispiele hier sind eigenständig entwickelte und getestete Portfolio-Systeme.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#projekte">Fallstudien ansehen</a>
+            <a class="button secondary" href="Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf">2-Seiten-Kurzprofil</a>
+          </div>
+          <div class="availability"><span aria-hidden="true"></span> Karlsruhe · Remote in Deutschland · Vollzeit</div>
+        </div>
+
+        <div class="flow-card" aria-label="Beispielhafter Aufbau der Workflow-Architektur">
+          <div class="flow-head">
+            <span>Lead-to-Offer Pipeline</span>
+            <span class="status">validated</span>
+          </div>
+          <ol class="flow">
+            <li><b>01</b><span>Input</span><small>Webhook</small></li>
+            <li><b>02</b><span>Validate</span><small>Schema + Regeln</small></li>
+            <li><b>03</b><span>Route</span><small>9 Pfade</small></li>
+            <li><b>04</b><span>Persist</span><small>Notion CRM</small></li>
+            <li><b>05</b><span>Review</span><small>Human approval</small></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="proof" aria-label="Technische Nachweise">
+        <article><strong>94</strong><span>n8n-Knoten</span></article>
+        <article><strong>31</strong><span>Code-Knoten</span></article>
+        <article><strong>14</strong><span>HTTP-Schnittstellen</span></article>
+        <article><strong>5</strong><span>bereinigte Exporte</span></article>
+      </section>
+
+      <section id="projekte" class="section projects" aria-labelledby="projects-title">
+        <div class="section-heading">
+          <p class="eyebrow">Ausgewählte Fallstudien</p>
+          <h2 id="projects-title">Drei Systeme. Ein roter Faden: belastbare Abläufe.</h2>
+          <p>Jede Fallstudie zeigt Geschäftsnutzen, technische Entscheidungen und prüfbare Workflow-Nachweise.</p>
+        </div>
+
+        <article class="case case-featured">
+          <div class="case-index">01</div>
+          <div class="case-main">
+            <div class="case-tags"><span>n8n</span><span>Webhooks</span><span>REST</span><span>CRM</span><span>JavaScript</span></div>
+            <h3>Lead-to-Offer Automation Suite</h3>
+            <p class="case-summary">Drei gekoppelte Workflows übernehmen Lead-Eingang, Validierung, Scoring, Dublettenprüfung, CRM-Aktualisierung und die Vorbereitung interner Angebotsentwürfe.</p>
+            <div class="case-grid">
+              <div><h4>Entscheidung</h4><p>Erfolg, Validierungsfehler und Speicherfehler werden getrennt behandelt. Dubletten werden aktualisiert statt erneut angelegt.</p></div>
+              <div><h4>Sicherheit</h4><p>Kein automatischer Angebotsversand. Testdaten verwenden reservierte Domains; externe Aktionen bleiben kontrolliert.</p></div>
+              <div><h4>Nachweis</h4><p>49 Knoten, 14 Code-Knoten und neun dokumentierte Entscheidungspfade über drei importierbare Exporte.</p></div>
+            </div>
+            <div class="file-links" aria-label="Technische Dateien zur Lead-to-Offer Automation">
+              <a href="lead-intake-system.sanitized.json" download>Lead Intake JSON</a>
+              <a href="crm-system.sanitized.json" download>CRM Router JSON</a>
+              <a href="offer-generator.sanitized.json" download>Offer Generator JSON</a>
+            </div>
+          </div>
+        </article>
+
+        <div class="case-row">
+          <article class="case">
+            <div class="case-index">02</div>
+            <div class="case-main">
+              <div class="case-tags"><span>LLM</span><span>Structured JSON</span><span>Evidence</span><span>Human-in-the-loop</span></div>
+              <h3>Evidence-based Outreach Intelligence</h3>
+              <p class="case-summary">Ein Workflow analysiert Website-Inhalte, erzeugt strukturierte Kontaktvorbereitung und speichert Entwürfe samt Fehlerstatus im CRM.</p>
+              <ul class="check-list">
+                <li>Website-Evidenz statt unbelegter Personalisierung</li>
+                <li>JSON-Parser und eigener AI-Fehlerpfad</li>
+                <li>Kein automatischer Versand</li>
+              </ul>
+              <div class="file-links"><a href="outreach-intelligence.sanitized.json" download>Workflow JSON</a></div>
+            </div>
+          </article>
+
+          <article class="case">
+            <div class="case-index">03</div>
+            <div class="case-main">
+              <div class="case-tags"><span>Research</span><span>API</span><span>Deduplication</span><span>Scoring</span></div>
+              <h3>Market Opportunity Research</h3>
+              <p class="case-summary">Ein Recherche-Workflow sammelt Betriebe, normalisiert Datensätze, erkennt Dubletten und bewertet neue Chancen vor der CRM-Ablage.</p>
+              <ul class="check-list">
+                <li>Mehrstufige Deduplizierung über IDs, Domain, Telefon und Name/Ort</li>
+                <li>Website- und Analysefehler werden gezählt</li>
+                <li>Run Summary macht Ergebnisse prüfbar</li>
+              </ul>
+              <div class="file-links"><a href="handwerk-opportunity.sanitized.json" download>Workflow JSON</a></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="profil" class="section profile" aria-labelledby="profile-title">
+        <div class="profile-copy">
+          <p class="eyebrow">Arbeitsweise</p>
+          <h2 id="profile-title">Technisch neugierig. Transparent in der Einordnung.</h2>
+          <p>Mein Schwerpunkt liegt auf n8n-Orchestrierung, Webhooks, REST/HTTP, JSON, JavaScript-Code-Knoten, CRM-Prozessen und strukturierten LLM-Ausgaben. Zusätzlich habe ich mit PostgreSQL, pgvector und Docker Compose ein lokales RAG-Testsystem aufgebaut.</p>
+          <p class="honesty">Die gezeigten Systeme sind Portfolio- und Testprojekte – keine produktiven Kundenimplementierungen. Ich suche den Einstieg auf Junior-/Associate-Niveau mit Raum, meine nachgewiesene technische Praxis in reale Projekte zu übertragen.</p>
+        </div>
+        <div class="skills" aria-label="Technologien und Methoden">
+          <span>n8n</span><span>REST APIs</span><span>Webhooks</span><span>JSON</span><span>JavaScript</span><span>CRM Automation</span><span>OpenAI / LLM</span><span>RAG</span><span>PostgreSQL</span><span>pgvector</span><span>Docker Compose</span><span>Testing</span><span>Documentation</span><span>Human-in-the-loop</span>
+        </div>
+      </section>
+
+      <section class="section closing" aria-label="Bewerbungsprofil herunterladen">
+        <p class="eyebrow">Kurz und prüfbar</p>
+        <h2>Die wichtigsten Nachweise auf zwei Seiten.</h2>
+        <p>Das Kurzprofil fasst Senioritätslevel, Projekterfahrung und technische Schwerpunkte recruiterfreundlich zusammen.</p>
+        <a class="button primary" href="Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf">Kurzprofil herunterladen</a>
+      </section>
+    </main>
+
+    <footer>
+      <span>Nico Joschke · Automation Portfolio</span>
+      <span>Portfolio- und Testsysteme · Stand September 2026</span>
+    </footer>
+  </body>
+</html>
+

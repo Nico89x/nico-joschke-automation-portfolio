@@ -1,0 +1,506 @@
+[
+  {
+    "name": "NOVAWERK - CRM System V1",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "name": "CRM Workflow Input",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          -980,
+          -80
+        ]
+      },
+      {
+        "parameters": {},
+        "name": "Manueller Test",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -980,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { name: 'Interner Testkontakt', company: 'NOVAWERK Testbetrieb', email: 'portfolio@example.com', phone: '+49 000 000000', website: 'https://example.invalid', industry: 'Handwerk', interest: 'Lead-System und Website verbessern', message: 'Interner Testdatensatz zur Prüfung der CRM-Zuordnung und Lead-Bewertung.', privacy: true, source: 'Manueller CRM-Test', status: 'Neu' } }];"
+        },
+        "name": "Interne Testdaten",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -760,
+          120
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $json.body ?? $json;\nconst clean = (value, max = 500) => String(value ?? '').replace(/[\\u0000-\\u001F\\u007F]/g, ' ').replace(/\\s+/g, ' ').trim().slice(0, max);\nconst now = new Date();\nconst name = clean(input.name ?? input.ansprechpartner, 120);\nconst company = clean(input.company ?? input.firma, 160);\nconst email = clean(input.email, 254).toLowerCase();\nconst phone = clean(input.phone ?? input.telefon, 40);\nconst website = clean(input.website, 300);\nconst interest = clean(input.interest ?? input.anliegen, 200);\nconst message = clean(input.message ?? input.nachricht, 3000);\nlet leadScore = 0;\nif (website) leadScore += 10;\nif (company) leadScore += 10;\nif (interest.length >= 8) leadScore += 20;\nif (/automat|prozess/i.test(interest + ' ' + message)) leadScore += 25;\nif (/landingpage|website|webseite/i.test(interest + ' ' + message)) leadScore += 20;\nif (phone) leadScore += 10;\nif (message.length >= 40) leadScore += 5;\nleadScore = Math.min(100, leadScore);\nconst priority = leadScore >= 80 ? 'A-Lead' : leadScore >= 50 ? 'B-Lead' : 'C-Lead';\nconst statusAllowed = ['Neu','Qualifiziert','Erstgespräch geplant','Angebot in Vorbereitung','Angebot gesendet','Follow-up nötig','Gewonnen','Verloren','Kein Interesse'];\nconst status = statusAllowed.includes(input.status) ? input.status : 'Neu';\nconst followUpDays = priority === 'A-Lead' ? 1 : priority === 'B-Lead' ? 3 : 7;\nconst followUpDate = input.followUpDate || new Date(now.getTime() + followUpDays * 86400000).toISOString().slice(0, 10);\nconst nextStep = clean(input.nextStep, 500) || (priority === 'A-Lead' ? 'Persönlich innerhalb eines Werktags kontaktieren' : priority === 'B-Lead' ? 'Bedarf prüfen und Erstgespräch anbieten' : 'Anfrage sichten und Rückmeldung vorbereiten');\nconst offerPotential = clean(input.offerPotential, 500) || (/automat/i.test(interest + ' ' + message) ? 'Automation & Betreuung' : /website|webseite|landingpage/i.test(interest + ' ' + message) ? 'Handwerker Landingpage' : 'Lead-System / Beratung');\nconst hash = [...email].reduce((value, char) => ((value << 5) - value + char.charCodeAt(0)) | 0, 0);\nconst leadId = clean(input.leadId, 120) || `NW-${now.toISOString().slice(0,10).replace(/-/g,'')}-${Math.abs(hash).toString(36).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;\nconst valid = Boolean(name && email && interest && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email));\nreturn [{ json: { valid, error: valid ? '' : 'Name, gültige E-Mail und Anliegen sind erforderlich', leadId, createdAt: input.createdAt || now.toISOString(), company, name, email, phone, website, industry: clean(input.industry ?? input.branche, 120), interest, message, source: clean(input.source, 120) || 'Website', status, priority, leadScore, offerPotential, nextStep, followUpDate, notes: clean(input.notes ?? input.notizen, 1800), offerCreated: Boolean(input.offerCreated), offerSent: Boolean(input.offerSent), customer: Boolean(input.customer) } }];"
+        },
+        "name": "CRM normalisieren & scoren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -520,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.valid }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "name": "CRM-Daten gültig?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -280,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.notion.com/v1/databases/NOVAWERK_NOTION_DATABASE_ID/query",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "notionApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ { filter: { or: [ { property: 'E-Mail', email: { equals: $json.email } }, { property: 'Lead ID', rich_text: { equals: $json.leadId } }, ...($json.website ? [{ property: 'Website', url: { equals: $json.website } }] : []), ...($json.company ? [{ property: 'Firma / Name', title: { equals: $json.company } }] : []) ] }, page_size: 10 } }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "Notion - CRM Duplikate",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -40,
+          -100
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const lead = $('CRM normalisieren & scoren').item.json;\nconst response = $json ?? {};\nconst apiFailed = Boolean(response.error || response.statusCode >= 400 || (!Array.isArray(response.results) && response.object === 'error'));\nif (apiFailed) return [{ json: { ...lead, storageReady: false, success: false, report: response.message || 'Notion-Duplikatprüfung fehlgeschlagen' } }];\nconst matches = Array.isArray(response.results) ? response.results : [];\nconst duplicate = matches.length > 0;\nconst duplicatePageId = duplicate ? matches[0].id : '';\nconst rich = (text, max = 1900) => [{ type: 'text', text: { content: String(text || '').slice(0, max) } }];\nconst changeLog = `${duplicate ? 'Aktualisiert' : 'Erstellt'} am ${new Date().toISOString()} · Score ${lead.leadScore} · ${lead.priority}`;\nconst properties = {\n  'Firma / Name': { title: rich(lead.company || lead.name) }, 'Lead ID': { rich_text: rich(lead.leadId) }, 'Erstellungsdatum': { date: { start: lead.createdAt } },\n  'Ansprechpartner': { rich_text: rich(lead.name) }, 'E-Mail': { email: lead.email }, 'Telefon': { phone_number: lead.phone || null }, 'Website': { url: lead.website || null },\n  'Branche': { rich_text: rich(lead.industry) }, 'Anliegen': { rich_text: rich(lead.interest) }, 'Nachricht': { rich_text: rich(lead.message) }, 'Lead-Quelle': { select: { name: lead.source } },\n  'Status': { select: { name: lead.status } }, 'Priorität': { select: { name: lead.priority } }, 'Lead Score': { number: lead.leadScore },\n  'Angebotspotenzial': { rich_text: rich(lead.offerPotential) }, 'Nächster Schritt': { rich_text: rich(lead.nextStep) }, 'Follow-up Datum': { date: { start: lead.followUpDate } },\n  'Notizen': { rich_text: rich([lead.notes, changeLog].filter(Boolean).join('\\n')) }, 'Angebot erstellt': { checkbox: lead.offerCreated }, 'Angebot versendet': { checkbox: lead.offerSent }, 'Kunde': { checkbox: lead.customer }\n};\nreturn [{ json: { ...lead, storageReady: true, duplicate, duplicatePageId, createBody: { parent: { database_id: 'NOVAWERK_NOTION_DATABASE_ID' }, properties }, updateBody: { properties } } }];"
+        },
+        "name": "CRM Payload & Änderungslog",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          200,
+          -100
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.storageReady }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "name": "Notion bereit?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          440,
+          -100
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.duplicate }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "name": "Bestehender Lead?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          680,
+          -180
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ 'https://api.notion.com/v1/pages/' + $json.duplicatePageId }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "notionApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.updateBody }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "Notion - CRM aktualisieren",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          920,
+          -260
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.notion.com/v1/pages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "notionApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Notion-Version",
+                "value": "2022-06-28"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.createBody }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "name": "Notion - CRM anlegen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          920,
+          -80
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const lead = $('CRM Payload & Änderungslog').item.json;\nconst response = $json ?? {};\nconst success = Boolean(response.id) && !response.error;\nreturn [{ json: { success, action: lead.duplicate ? 'updated' : 'created', duplicateSkipped: lead.duplicate, leadId: lead.leadId, notionPageId: response.id || lead.duplicatePageId || '', leadScore: lead.leadScore, priority: lead.priority, nextStep: lead.nextStep, followUpDate: lead.followUpDate, report: success ? `CRM-Datensatz ${lead.duplicate ? 'aktualisiert' : 'erstellt'}.` : (response.message || 'CRM-Speicherung fehlgeschlagen') } }];"
+        },
+        "name": "CRM Abschlussbericht",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1160,
+          -180
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { success: false, action: 'skipped', leadId: $json.leadId || '', report: $json.error || $json.report || 'CRM-Verarbeitung abgebrochen' } }];"
+        },
+        "name": "CRM Fehlerbericht",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          680,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": "<REDACTED_ID>",
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "NOVAWERK CRM"
+          },
+          "columns": {
+            "mappingMode": "autoMapInputData",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "name": "Alternative - Google Sheets",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          200,
+          300
+        ],
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "content": "## CRM-Einrichtung\n- Notion ist der vorbereitete Hauptspeicher.\n- Datenbank-ID in den Notion-Nodes und Code-Nodes ersetzen.\n- Notion-Credential auswählen.\n- Google Sheets ist als deaktivierte Alternative vorbereitet; Header aus der beiliegenden CSV übernehmen.\n- Workflow kann über **CRM Workflow Input** von anderen Workflows aufgerufen werden.\n- Duplikate werden aktualisiert, nicht neu angelegt.\n- Änderungen werden im Feld Notizen protokolliert.",
+          "height": 300,
+          "width": 500
+        },
+        "name": "CRM Dokumentation",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -980,
+          -500
+        ]
+      }
+    ],
+    "connections": {
+      "CRM Workflow Input": {
+        "main": [
+          [
+            {
+              "node": "CRM normalisieren & scoren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manueller Test": {
+        "main": [
+          [
+            {
+              "node": "Interne Testdaten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Interne Testdaten": {
+        "main": [
+          [
+            {
+              "node": "CRM normalisieren & scoren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CRM normalisieren & scoren": {
+        "main": [
+          [
+            {
+              "node": "CRM-Daten gültig?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CRM-Daten gültig?": {
+        "main": [
+          [
+            {
+              "node": "Notion - CRM Duplikate",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "CRM Fehlerbericht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Notion - CRM Duplikate": {
+        "main": [
+          [
+            {
+              "node": "CRM Payload & Änderungslog",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "CRM Payload & Änderungslog": {
+        "main": [
+          [
+            {
+              "node": "Notion bereit?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Notion bereit?": {
+        "main": [
+          [
+            {
+              "node": "Bestehender Lead?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "CRM Fehlerbericht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Bestehender Lead?": {
+        "main": [
+          [
+            {
+              "node": "Notion - CRM aktualisieren",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Notion - CRM anlegen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Notion - CRM aktualisieren": {
+        "main": [
+          [
+            {
+              "node": "CRM Abschlussbericht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Notion - CRM anlegen": {
+        "main": [
+          [
+            {
+              "node": "CRM Abschlussbericht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "Europe/Berlin",
+      "saveDataErrorExecution": "all",
+      "saveDataSuccessExecution": "all",
+      "saveManualExecutions": true
+    },
+    "nodeGroups": [],
+    "activeVersionId": null,
+    "versionCounter": 1,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]
