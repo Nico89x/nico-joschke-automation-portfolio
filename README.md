@@ -2,7 +2,7 @@
 
 Portfolio für Einstiegsrollen rund um **n8n, Workflow Automation, AI Automation und API-Integrationen**.
 
-[Portfolio-Webseite öffnen](https://nico-joschke-automation-portfolio.brisk-rose-9380.chatgpt.site) · [Zwei-Seiten-PDF öffnen](Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf)
+[Portfolio-Webseite öffnen](https://nico89x.github.io/nico-joschke-automation-portfolio/) · [Zwei-Seiten-PDF öffnen](Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf)
 
 ## Profil in Kürze
 
