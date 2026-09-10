@@ -2,6 +2,8 @@
 
 Portfolio für Einstiegsrollen rund um **n8n, Workflow Automation, AI Automation und API-Integrationen**.
 
+[Portfolio-Webseite öffnen](https://nico-joschke-automation-portfolio.brisk-rose-9380.chatgpt.site) · [Zwei-Seiten-PDF öffnen](Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf)
+
 ## Profil in Kürze
 
 - Technisch starker Quereinsteiger auf Junior-/Associate-Niveau
@@ -23,7 +25,16 @@ Die fünf bereinigten Exporte enthalten zusammen 94 n8n-Knoten, 31 Code-Knoten u
 
 [Zwei-Seiten-PDF öffnen](Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf)
 
-## Portfolio-Seite lokal öffnen
+## Qualitätsnachweise
 
-Die veröffentlichungsfertige statische Seite liegt unter [`index.html`](index.html). Sie kann später als GitHub Pages- oder vergleichbare statische Website bereitgestellt werden.
+- Alle fünf JSON-Dateien sind parsebar und standardmäßig deaktiviert.
+- Verbindungen verweisen ausschließlich auf vorhandene Knoten.
+- Zugangsdaten und Credential-Verweise wurden entfernt.
+- AI-Ergebnisse werden strukturiert verarbeitet; Entwürfe werden nicht automatisch versendet.
+- Grenzen zur Produktion werden in den Fallstudien ausdrücklich benannt.
 
+## Realistische nächste Engineering-Schritte
+
+Für den produktiven Betrieb würde ich insbesondere Retry und Backoff, URL-Allowlisting, Schutz vor Prompt-Injection, CRM-Pagination, zentrale Konfiguration und definierte Aufbewahrungsregeln für personenbezogene Ausführungsdaten ergänzen.
+
+Die Systeme sind eigenständig entwickelte Portfolio- und Testprojekte, keine behaupteten produktiven Kundenimplementierungen.
