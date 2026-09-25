@@ -15,6 +15,7 @@ Portfolio für Einstiegsrollen rund um **n8n, Workflow Automation, AI Automation
 
 | Fallstudie | Schwerpunkt | Technischer Nachweis |
 |---|---|---|
+| **Multi-Agent AI Operations Hub** | Kontrollierte n8n-Orchestrierung, PostgreSQL/pgvector-RAG, lokales Ollama, Audit-Log und Human-in-the-loop | [Fallstudie](multi-agent-ai-operations-hub.html), [zentraler Workflow](operations-hub-central-workflow.json), [AI-Prüfworkflow](operations-hub-local-ai-receipt.json) |
 | Lead-to-Offer Automation Suite | Validierung, Routing, Deduplizierung, CRM und interne Angebotsentwürfe | [Lead Intake](lead-intake-system.sanitized.json), [CRM Router](crm-system.sanitized.json), [Offer Generator](offer-generator.sanitized.json) |
 | Evidence-based Outreach Intelligence | Website-Evidenz, strukturierte AI-Ausgaben und Human-in-the-loop | [Workflow](outreach-intelligence.sanitized.json) |
 | Market Opportunity Research | API-Recherche, Normalisierung, Deduplizierung und Scoring | [Workflow](handwerk-opportunity.sanitized.json) |
@@ -28,6 +29,7 @@ Die fünf bereinigten Exporte enthalten zusammen 94 n8n-Knoten, 31 Code-Knoten u
 ## Qualitätsnachweise
 
 - Alle fünf JSON-Dateien sind parsebar und standardmäßig deaktiviert.
+- Der Operations Hub wurde mit 168 lokalen automatisierten Tests geprüft; die kleine synthetische AI-Evaluation und ihre False-Negative-Grenze sind in der Fallstudie offengelegt.
 - Verbindungen verweisen ausschließlich auf vorhandene Knoten.
 - Zugangsdaten und Credential-Verweise wurden entfernt.
 - AI-Ergebnisse werden strukturiert verarbeitet; Entwürfe werden nicht automatisch versendet.

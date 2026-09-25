@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Fallstudie: lokaler Multi-Agent AI Operations Hub mit n8n, PostgreSQL, pgvector, RAG, Ollama, Audit-Log und Human-in-the-loop." />
+    <title>Multi-Agent AI Operations Hub – Nico Joschke</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="index.html">NJ<span>/automation</span></a>
+      <nav><a href="index.html#projekte">Alle Fallstudien</a><a class="nav-link" href="https://github.com/Nico89x/nico-joschke-automation-portfolio">GitHub</a></nav>
+    </header>
+
+    <main>
+      <section class="section detail-hero">
+        <p class="eyebrow">Hauptprojekt · lokal ausführbar · synthetische Daten</p>
+        <h1>Multi-Agent AI Operations Hub</h1>
+        <p class="lede">Ein kontrollierter n8n-Prototyp, der unstrukturierte Automatisierungsanfragen validiert, mit internem Wissen verbindet und als prüfbaren technischen Entwurf aufbereitet. KI interpretiert – deterministische Logik kontrolliert.</p>
+        <div class="case-tags"><span>n8n</span><span>Docker Compose</span><span>PostgreSQL</span><span>pgvector</span><span>RAG</span><span>Ollama</span><span>JavaScript</span><span>SQL</span><span>Human-in-the-loop</span></div>
+        <div class="notice"><strong>Ehrliche Einordnung:</strong> Der Name beschreibt das Zielbild. Der aktuelle Stand ist ein Portfolio-Prototyp, keine autonome Multi-Agenten-Produktionsplattform. Die zentrale Orchestrierung nutzt deterministische Agenten-Baselines; ein lokales Modell liefert begrenzte Hinweise.</div>
+      </section>
+
+      <section class="proof detail-proof">
+        <article><strong>168</strong><span>lokale Tests bestanden</span></article>
+        <article><strong>14/15</strong><span>belegte AI-Entwürfe akzeptiert</span></article>
+        <article><strong>85,7 %</strong><span>mittlere markierte Quellenpräzision</span></article>
+        <article><strong>0</strong><span>externe Schreibaktionen</span></article>
+      </section>
+
+      <section class="section case-study-section">
+        <div class="section-heading"><div><p class="eyebrow">Problem und Ziel</p><h2>Von Freitext zu einem kontrolliert prüfbaren Entwurf.</h2></div><p>Automatisierungsanfragen enthalten häufig Lücken, unklare Schnittstellen und sensible Daten. Das System soll diese Risiken sichtbar machen, bevor irgendetwas extern verändert wird.</p></div>
+        <div class="case-grid">
+          <div><h4>Eingabe</h4><p>Unstrukturierte Unternehmensanfrage, aktuelle Tools, Ziele, Einschränkungen und Idempotency-Key.</p></div>
+          <div><h4>Ergebnis</h4><p>Strukturierter Lösungsentwurf mit RAG-Evidenz, Risikoanalyse, Aufwandsspanne und offenen Fragen.</p></div>
+          <div><h4>Kontrolle</h4><p>Namentliche menschliche Freigabe; die Portfolio-Demo erzeugt ausschließlich einen lokalen synthetischen Entwurf.</p></div>
+        </div>
+      </section>
+
+      <section class="section case-study-section">
+        <p class="eyebrow">Systemarchitektur</p>
+        <h2>Deterministische Kontrolle um einen begrenzten lokalen AI-Schritt.</h2>
+        <figure class="diagram"><img src="operations-hub-architecture.svg" alt="Architekturdiagramm des Multi-Agent AI Operations Hub" /><figcaption>Webhooks, lokale Wissenssuche, Entwurf, Risiko- und Aufwandprüfung, Audit und menschliche Entscheidung.</figcaption></figure>
+        <figure class="diagram"><img src="operations-hub-local-ai.svg" alt="Ablauf der lokalen Ollama- und n8n-Integration" /><figcaption>Ollama läuft lokal auf dem Host; n8n validiert Schema, Quellen und Berechtigung unabhängig.</figcaption></figure>
+      </section>
+
+      <section class="section case-study-section">
+        <div class="section-heading"><div><p class="eyebrow">Komponenten</p><h2>Klare Rollen und validierte Übergaben.</h2></div><p>Jede Stufe erhält nur die Daten, die sie benötigt. Kritische Entscheidungen bleiben außerhalb des Sprachmodells.</p></div>
+        <div class="role-grid">
+          <article><h3>Intake</h3><p>Prüft Felder, Formate, sensible Daten und Idempotenz. Ungültige Eingaben werden auditiert gestoppt.</p></article>
+          <article><h3>Research + RAG</h3><p>Nutzt einen begrenzten lokalen Tool-Katalog und freigegebene Wissensbausteine aus PostgreSQL/pgvector.</p></article>
+          <article><h3>Solution Design</h3><p>Erstellt Trigger, Datenflüsse, Integrationen, Fehlerpfade und offene Fragen als strukturierten Entwurf.</p></article>
+          <article><h3>Risk + Estimate</h3><p>Markiert Datenschutz-, Dubletten- und Berechtigungsrisiken und erzeugt eine regelbasierte Aufwandsspanne.</p></article>
+          <article><h3>Local AI Advisory</h3><p>Qwen über Ollama interpretiert Freitext. Das Ergebnis muss ein enges Schema und mindestens eine zulässige Quellen-ID erfüllen.</p></article>
+          <article><h3>Human Review</h3><p>Eine einmalige namentliche Freigabe oder Ablehnung wird auditiert. Das Ausführungstor bleibt standardmäßig geschlossen.</p></article>
+        </div>
+      </section>
+
+      <section class="section case-study-section">
+        <div class="section-heading"><div><p class="eyebrow">Tests und Evaluation</p><h2>Ergebnisse mit sichtbaren Grenzen.</h2></div><p>Alle Angaben stammen aus lokalen synthetischen Testläufen. Es werden keine Produktivdaten oder realen Kundensysteme verwendet.</p></div>
+        <div class="test-table" role="region" aria-label="Testergebnisse" tabindex="0">
+          <table><thead><tr><th>Prüfung</th><th>Ergebnis</th><th>Einordnung</th></tr></thead><tbody>
+            <tr><td>Automatisierte Tests</td><td>168 bestanden</td><td>Validierung, Routing, Agenten-Baselines, Freigaben und Fehlerpfade</td></tr>
+            <tr><td>Lokale Ollama/n8n-Läufe</td><td>3 erfolgreich</td><td>Synthetische Anfragen; keine externen Aktionen</td></tr>
+            <tr><td>Vorab markierter AI-Satz</td><td>14/15 akzeptiert</td><td>Ein Fall stoppte trotz vorhandener passender Quelle: False Negative</td></tr>
+            <tr><td>Trigger unter akzeptierten Fällen</td><td>14/14 passend</td><td>Kleiner synthetischer Einmallauf, nicht generalisierbar</td></tr>
+            <tr><td>Markierte Quellenpräzision</td><td>85,7 % im Mittel</td><td>Keine semantische Entailment-Prüfung; menschliche Kontrolle bleibt nötig</td></tr>
+          </tbody></table>
+        </div>
+        <div class="notice warning"><strong>Nicht behauptet:</strong> produktionsreife autonome Agenten, reale Kundenwirkung oder inhaltlich stets korrekte Empfehlungen. Die Evaluation zeigt technische Kontrollmechanismen, nicht die vollständige fachliche Richtigkeit jedes Vorschlags.</div>
+      </section>
+
+      <section class="section case-study-section">
+        <p class="eyebrow">Prüfbare Exporte</p>
+        <h2>Zwei zentrale n8n-Workflows.</h2>
+        <p class="lede">Die Exporte enthalten keine Zugangsdaten und sind deaktiviert. PostgreSQL-Credentials müssen nach einem Import lokal neu ausgewählt werden.</p>
+        <div class="file-links"><a href="operations-hub-central-workflow.json" download>Zentralen Operations-Hub-Workflow herunterladen</a><a href="operations-hub-local-ai-receipt.json" download>Lokalen AI-Prüfworkflow herunterladen</a><a href="index.html#projekte">Zurück zur Übersicht</a></div>
+      </section>
+    </main>
+    <footer><span>Nico Joschke · Automation Portfolio</span><span>Portfolio- und Testsystem · Stand September 2026</span></footer>
+  </body>
+</html>

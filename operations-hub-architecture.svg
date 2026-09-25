@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="660" viewBox="0 0 1280 660" role="img" aria-labelledby="title description">
+  <title id="title">Multi-Agent AI Operations Hub: local architecture</title>
+  <desc id="description">A synthetic request passes deterministic intake and deduplication, local knowledge retrieval and bounded research, blueprint design with risk and effort review, PostgreSQL audit, and a named human decision. Approval prepares only a local synthetic draft. External actions remain disabled.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#77a8ff"/>
+    </marker>
+    <style>
+      .base { font-family: Arial, Helvetica, sans-serif; }
+      .heading { fill: #f4f7ff; font-size: 30px; font-weight: 700; }
+      .subheading { fill: #a9b9d5; font-size: 16px; }
+      .label { fill: #f4f7ff; font-size: 18px; font-weight: 700; }
+      .detail { fill: #c1cee4; font-size: 14px; }
+      .small { fill: #a9b9d5; font-size: 13px; }
+      .flow { fill: none; stroke: #77a8ff; stroke-width: 3; marker-end: url(#arrow); }
+      .support { fill: none; stroke: #4b6b9a; stroke-width: 2; stroke-dasharray: 5 5; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="660" rx="22" fill="#101827"/>
+  <rect x="26" y="26" width="1228" height="608" rx="18" fill="#142136" stroke="#273e60" stroke-width="2"/>
+  <text class="base heading" x="62" y="85">Multi-Agent AI Operations Hub</text>
+  <text class="base subheading" x="62" y="116">Implemented local flow · deterministic agents and embeddings · synthetic data</text>
+
+  <rect x="62" y="172" width="174" height="142" rx="14" fill="#20395a" stroke="#557eb2" stroke-width="2"/>
+  <text class="base label" x="82" y="213">1  Request</text>
+  <text class="base detail" x="82" y="241">POST webhook</text>
+  <text class="base detail" x="82" y="264">Synthetic company</text>
+  <text class="base detail" x="82" y="287">requirements</text>
+
+  <path class="flow" d="M238 243 H273"/>
+  <rect x="278" y="172" width="190" height="142" rx="14" fill="#1d4860" stroke="#53acba" stroke-width="2"/>
+  <text class="base label" x="298" y="213">2  Intake</text>
+  <text class="base detail" x="298" y="241">Validate fields</text>
+  <text class="base detail" x="298" y="264">Normalize JSON</text>
+  <text class="base detail" x="298" y="287">Deduplicate key</text>
+
+  <path class="flow" d="M470 243 H505"/>
+  <rect x="510" y="172" width="198" height="142" rx="14" fill="#263c64" stroke="#7f91d5" stroke-width="2"/>
+  <text class="base label" x="530" y="213">3  Context</text>
+  <text class="base detail" x="530" y="241">Local RAG retrieval</text>
+  <text class="base detail" x="530" y="264">Bounded research</text>
+  <text class="base detail" x="530" y="287">Source references</text>
+
+  <path class="flow" d="M710 243 H745"/>
+  <rect x="750" y="172" width="208" height="142" rx="14" fill="#39405b" stroke="#b89ccf" stroke-width="2"/>
+  <text class="base label" x="770" y="213">4  Proposal</text>
+  <text class="base detail" x="770" y="241">Workflow blueprint</text>
+  <text class="base detail" x="770" y="264">Risk review</text>
+  <text class="base detail" x="770" y="287">Rule-based estimate</text>
+
+  <path class="flow" d="M960 243 H995"/>
+  <rect x="1000" y="172" width="218" height="142" rx="14" fill="#4b3d4b" stroke="#d79a9a" stroke-width="2"/>
+  <text class="base label" x="1020" y="213">5  Human review</text>
+  <text class="base detail" x="1020" y="241">Named one-time decision</text>
+  <text class="base detail" x="1020" y="264">Approve or reject</text>
+  <text class="base detail" x="1020" y="287">Execution gate closed</text>
+
+  <path class="support" d="M374 316 V359 H620"/>
+  <path class="support" d="M609 316 V359"/>
+  <path class="support" d="M854 316 V359 H810"/>
+  <rect x="422" y="366" width="430" height="96" rx="14" fill="#1c2f49" stroke="#59708f" stroke-width="2"/>
+  <text class="base label" x="444" y="402">PostgreSQL + pgvector</text>
+  <text class="base detail" x="444" y="429">Request state · source chunks · blueprint · stage audit</text>
+
+  <path class="flow" d="M1109 316 V382"/>
+  <rect x="976" y="390" width="242" height="72" rx="14" fill="#2b4b3f" stroke="#78b698" stroke-width="2"/>
+  <text class="base label" x="996" y="420">Local demo draft</text>
+  <text class="base detail" x="996" y="445">Only after approval</text>
+
+  <rect x="62" y="520" width="1156" height="76" rx="14" fill="#192b43" stroke="#456082" stroke-width="2"/>
+  <circle cx="90" cy="558" r="11" fill="#77d5a0"/>
+  <text class="base label" x="115" y="555">Safety boundary</text>
+  <text class="base detail" x="115" y="578">No real CRM writes, task creation, messages, publication, or model API calls in the current build.</text>
+  <text class="base small" x="62" y="620">Portfolio architecture diagram · not a screenshot of the n8n editor</text>
+</svg>
+

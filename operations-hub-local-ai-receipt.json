@@ -1,0 +1,82 @@
+{
+  "id": "a7be0a9e-4f45-4f86-a02b-2b001209d909",
+  "name": "09 - Local Ollama Interpretation Receipt",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "local-ollama-interpretation-receipt", "responseMode": "responseNode", "options": {} },
+      "id": "c98dc607-7bc0-49e9-94c4-909130c72001",
+      "name": "Receive local model interpretation",
+      "type": "n8n-nodes-base.webhook", "typeVersion": 2,
+      "position": [-620, 0],
+      "webhookId": "c98dc607-7bc0-49e9-94c4-909130c72001"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw=$json.body&&typeof $json.body==='object'&&!Array.isArray($json.body)?$json.body:$json;const errors=[];const exact=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&JSON.stringify(Object.keys(v).sort())===JSON.stringify([...keys].sort());const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;const str=(v,max)=>typeof v==='string'&&v.trim().length>0&&v.length<=max;const list=(v,max,len)=>Array.isArray(v)&&v.length<=max&&v.every(x=>str(x,len));if(!exact(raw,['runId','requestDbId','model','promptVersion','durationMs','usage','data']))errors.push('Unexpected or missing receipt fields.');if(!uuid.test(raw.runId??''))errors.push('runId must be a UUID.');if(!uuid.test(raw.requestDbId??''))errors.push('requestDbId must be a UUID.');if(typeof raw.model!=='string'||!/^[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+$/.test(raw.model)||raw.model.endsWith(':cloud'))errors.push('A local model tag is required.');if(!/^[a-z0-9-]{3,50}$/.test(raw.promptVersion??''))errors.push('Invalid promptVersion.');if(!Number.isInteger(raw.durationMs)||raw.durationMs<0||raw.durationMs>180000)errors.push('Invalid durationMs.');if(!exact(raw.usage,['inputTokens','outputTokens'])||!Number.isInteger(raw.usage?.inputTokens)||raw.usage.inputTokens<0||!Number.isInteger(raw.usage?.outputTokens)||raw.usage.outputTokens<0)errors.push('Invalid token usage.');const d=raw.data;if(!exact(d,['problemSummary','triggerType','missingInformation','relevantSourceIds','recommendation']))errors.push('Invalid advisory schema.');if(!str(d?.problemSummary,500)||!str(d?.recommendation,700))errors.push('Invalid advisory text.');if(!['webhook','email','schedule','manual','unknown'].includes(d?.triggerType))errors.push('Invalid triggerType.');if(!list(d?.missingInformation,8,240)||!list(d?.relevantSourceIds,5,100)||new Set(d?.relevantSourceIds??[]).size!==(d?.relevantSourceIds??[]).length)errors.push('Invalid advisory lists.');if(!Array.isArray(d?.relevantSourceIds)||d.relevantSourceIds.length===0)errors.push('At least one approved source citation is required.');if(/[^\\s@]+@[^\\s@]+\\.[^\\s@]+|\\+?\\d[\\d\\s().-]{7,}\\d/.test(JSON.stringify(d??{})))errors.push('Direct contact data is not allowed in advisory output.');if(errors.length)return[{json:{valid:false,errors}}];return[{json:{valid:true,runId:raw.runId,requestDbId:raw.requestDbId,model:raw.model,promptVersion:raw.promptVersion,durationMs:raw.durationMs,usage:raw.usage,data:d,executionGate:false}}];"
+      },
+      "id": "c98dc607-7bc0-49e9-94c4-909130c72002",
+      "name": "Validate local advisory result",
+      "type": "n8n-nodes-base.code", "typeVersion": 2,
+      "position": [-390, 0]
+    },
+    {
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "c98dc607-7bc0-49e9-94c4-909130c72003", "leftValue": "={{ $json.valid }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true", "singleValue": true } }], "combinator": "and" }, "options": {} },
+      "id": "c98dc607-7bc0-49e9-94c4-909130c72003",
+      "name": "Receipt valid?",
+      "type": "n8n-nodes-base.if", "typeVersion": 2.2,
+      "position": [-160, 0]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH payload AS (SELECT $1::jsonb AS doc), eligible AS (SELECT pr.id AS request_id FROM project_requests pr JOIN project_blueprints pb ON pb.request_id=pr.id CROSS JOIN payload p WHERE pr.id=(p.doc->>'requestDbId')::uuid AND pr.source='operations-hub' AND pr.company_name LIKE 'Synthetic %' AND pb.approval_status='pending' AND NOT EXISTS (SELECT 1 FROM jsonb_array_elements_text(p.doc->'data'->'relevantSourceIds') AS cited(source_id) WHERE NOT EXISTS (SELECT 1 FROM jsonb_array_elements(COALESCE(pb.solution_blueprint->'data'->'evidence','[]'::jsonb)) AS evidence(item) WHERE evidence.item->>'sourceId'=cited.source_id))), inserted AS (INSERT INTO agent_runs (id,request_id,started_at,finished_at,agent_name,status,model_name,prompt_version,input_data,output_data,duration_ms,input_tokens,output_tokens,estimated_cost_usd,approval_status,outcome) SELECT (p.doc->>'runId')::uuid,e.request_id,NOW()-((p.doc->>'durationMs')::int*INTERVAL '1 millisecond'),NOW(),'AI Interpretation Agent','completed',p.doc->>'model',p.doc->>'promptVersion',jsonb_build_object('local',true,'synthetic',true),p.doc->'data',(p.doc->>'durationMs')::int,(p.doc->'usage'->>'inputTokens')::int,(p.doc->'usage'->>'outputTokens')::int,0,'pending','advisory-only' FROM eligible e CROSS JOIN payload p ON CONFLICT(id) DO NOTHING RETURNING id,request_id), audited AS (INSERT INTO audit_events (request_id,event_type,actor,details) SELECT i.request_id,'local-ai-interpretation.completed','AI Interpretation Agent',jsonb_build_object('stage','aiInterpretation','status','completed','modelName',p.doc->>'model','promptVersion',p.doc->>'promptVersion','durationMs',(p.doc->>'durationMs')::int,'inputTokens',(p.doc->'usage'->>'inputTokens')::int,'outputTokens',(p.doc->'usage'->>'outputTokens')::int,'estimatedCostUsd',0,'executionGate',false) FROM inserted i CROSS JOIN payload p RETURNING id) SELECT (SELECT id::text FROM inserted) AS \"runId\",(SELECT COUNT(*) FROM audited)::int AS \"auditEventsWritten\";",
+        "options": { "queryReplacement": "={{ JSON.stringify($json) }}" }
+      },
+      "id": "c98dc607-7bc0-49e9-94c4-909130c72004",
+      "name": "Persist local agent run and audit",
+      "type": "n8n-nodes-base.postgres", "typeVersion": 2.6,
+      "position": [100, -100]
+    },
+    {
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "c98dc607-7bc0-49e9-94c4-909130c72005", "leftValue": "={{ !!$json.runId }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true", "singleValue": true } }], "combinator": "and" }, "options": {} },
+      "id": "c98dc607-7bc0-49e9-94c4-909130c72005",
+      "name": "Run persisted?",
+      "type": "n8n-nodes-base.if", "typeVersion": 2.2,
+      "position": [340, -100]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { ok: true, status: 'local-advisory-persisted', runId: $json.runId, auditEventsWritten: $json.auditEventsWritten, executionGate: false, externalActions: { crmWrites: 0, tasksCreated: 0, messagesSent: 0 } } }}", "options": { "responseCode": 201 } },
+      "id": "c98dc607-7bc0-49e9-94c4-909130c72006",
+      "name": "Confirm local advisory persistence",
+      "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.4,
+      "position": [590, -210]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { ok: false, status: 'rejected', errors: $json.errors, executionGate: false } }}", "options": { "responseCode": 422 } },
+      "id": "c98dc607-7bc0-49e9-94c4-909130c72007",
+      "name": "Reject invalid advisory receipt",
+      "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.4,
+      "position": [100, 130]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { ok: false, status: 'ineligible-or-duplicate', executionGate: false } }}", "options": { "responseCode": 409 } },
+      "id": "c98dc607-7bc0-49e9-94c4-909130c72008",
+      "name": "Reject ineligible or duplicate run",
+      "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.4,
+      "position": [590, 10]
+    }
+  ],
+  "connections": {
+    "Receive local model interpretation": { "main": [[{ "node": "Validate local advisory result", "type": "main", "index": 0 }]] },
+    "Validate local advisory result": { "main": [[{ "node": "Receipt valid?", "type": "main", "index": 0 }]] },
+    "Receipt valid?": { "main": [[{ "node": "Persist local agent run and audit", "type": "main", "index": 0 }], [{ "node": "Reject invalid advisory receipt", "type": "main", "index": 0 }]] },
+    "Persist local agent run and audit": { "main": [[{ "node": "Run persisted?", "type": "main", "index": 0 }]] },
+    "Run persisted?": { "main": [[{ "node": "Confirm local advisory persistence", "type": "main", "index": 0 }], [{ "node": "Reject ineligible or duplicate run", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "c98dc607-7bc0-49e9-94c4-909130c72009",
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": []
+}
+

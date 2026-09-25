@@ -1,0 +1,146 @@
+{
+  "name": "07 - Multi-Agent AI Operations Hub",
+  "nodes": [
+    {
+      "parameters": {"httpMethod": "POST", "path": "operations-hub", "responseMode": "responseNode", "options": {}},
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22001",
+      "name": "Receive operations request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-900, 0],
+      "webhookId": "be8ba8ac-ecc4-4c01-b5d6-27e906c22001"
+    },
+    {
+      "parameters": {
+        "jsCode": "const emailPattern=/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;const allowed=new Set(['companyName','contactName','contactEmail','processDescription','currentTools','goals','constraints','idempotencyKey']);const sensitivities=new Set(['public','internal','personal','special-category','unknown']);const clean=v=>typeof v==='string'?v.trim():'';const arr=v=>Array.isArray(v)?[...new Set(v.map(clean).filter(Boolean))]:[];const body=$json.body&&typeof $json.body==='object'&&!Array.isArray($json.body)?$json.body:$json;const c=body.constraints&&typeof body.constraints==='object'&&!Array.isArray(body.constraints)?body.constraints:{};const normalized={companyName:clean(body.companyName),contactName:clean(body.contactName),contactEmail:clean(body.contactEmail).toLowerCase(),processDescription:clean(body.processDescription),currentTools:arr(body.currentTools),goals:arr(body.goals),constraints:{...c},idempotencyKey:clean(body.idempotencyKey)};const errors=[],warnings=[];for(const key of Object.keys(body))if(!allowed.has(key))errors.push('unknown field: '+key);for(const key of Object.keys(c))if(!['budgetEur','deadline','dataSensitivity','requiresHumanApproval'].includes(key))errors.push('unknown constraint field: '+key);if(normalized.companyName.length<2||normalized.companyName.length>120)errors.push('companyName must contain 2 to 120 characters');if(normalized.processDescription.length<40||normalized.processDescription.length>5000)errors.push('processDescription must contain 40 to 5000 characters');if(!normalized.goals.length||normalized.goals.length>10)errors.push('goals must contain 1 to 10 items');if(normalized.currentTools.length>30)errors.push('currentTools must contain at most 30 items');if(normalized.contactEmail&&!emailPattern.test(normalized.contactEmail))errors.push('contactEmail is invalid');if(normalized.idempotencyKey.length<8||normalized.idempotencyKey.length>120)errors.push('idempotencyKey must contain 8 to 120 characters');const sensitivity=c.dataSensitivity??'unknown';if(!sensitivities.has(sensitivity))errors.push('constraints.dataSensitivity is invalid');if(c.requiresHumanApproval!==undefined&&typeof c.requiresHumanApproval!=='boolean')errors.push('constraints.requiresHumanApproval must be a boolean');if(['personal','special-category'].includes(sensitivity)&&c.requiresHumanApproval===false)errors.push('sensitive data requires human approval');if(c.budgetEur!==undefined&&(typeof c.budgetEur!=='number'||!Number.isFinite(c.budgetEur)||c.budgetEur<0||c.budgetEur>1000000))errors.push('constraints.budgetEur must be between 0 and 1000000');if(sensitivity==='unknown')warnings.push('data sensitivity requires clarification');if(!normalized.currentTools.length)warnings.push('current tools require clarification');normalized.constraints={...c,dataSensitivity:sensitivity,requiresHumanApproval:c.requiresHumanApproval!==false};return[{json:{valid:errors.length===0,errors,warnings,normalized,rawPayload:body,workflowRequestId:'hub-'+$execution.id}}];"
+      },
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22002",
+      "name": "Validate and normalize request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-660, 0]
+    },
+    {
+      "parameters": {"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"id":"be8ba8ac-ecc4-4c01-b5d6-27e906c22003","leftValue":"={{ $json.valid }}","rightValue":true,"operator":{"type":"boolean","operation":"true","singleValue":true}}],"combinator":"and"},"options":{}},
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22003",
+      "name": "Request valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-420, 0]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH payload AS (SELECT $1::jsonb AS doc), inserted AS (INSERT INTO project_requests(source,company_name,contact_name,contact_email,process_description,current_tools,goals,constraints,status,raw_payload,idempotency_key) SELECT 'operations-hub',doc->'normalized'->>'companyName',NULLIF(doc->'normalized'->>'contactName',''),NULLIF(doc->'normalized'->>'contactEmail',''),doc->'normalized'->>'processDescription',COALESCE(doc->'normalized'->'currentTools','[]'::jsonb),COALESCE(doc->'normalized'->'goals','[]'::jsonb),COALESCE(doc->'normalized'->'constraints','{}'::jsonb),'planning',COALESCE(doc->'rawPayload',doc->'normalized'),doc->'normalized'->>'idempotencyKey' FROM payload ON CONFLICT(idempotency_key) DO NOTHING RETURNING id,TRUE AS created), resolved AS (SELECT id,created FROM inserted UNION ALL SELECT r.id,FALSE FROM project_requests r CROSS JOIN payload WHERE r.idempotency_key=payload.doc->'normalized'->>'idempotencyKey' AND NOT EXISTS(SELECT 1 FROM inserted) LIMIT 1), logged AS (INSERT INTO audit_events(request_id,event_type,actor,details) SELECT id,CASE WHEN created THEN 'operations-hub.started' ELSE 'operations-hub.duplicate' END,'operations-hub',jsonb_build_object('workflowRequestId',payload.doc->>'workflowRequestId','created',resolved.created) FROM resolved CROSS JOIN payload RETURNING id) SELECT resolved.id::text AS \"requestDbId\",resolved.created FROM resolved;",
+        "options": {"queryReplacement": "={{ JSON.stringify({ normalized: $json.normalized, rawPayload: $json.rawPayload, workflowRequestId: $json.workflowRequestId }) }}"}
+      },
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22004",
+      "name": "Persist or resolve request",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [-160, -100],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {"conditions":{"options":{"caseSensitive":true,"leftValue":"","typeValidation":"strict","version":2},"conditions":[{"id":"be8ba8ac-ecc4-4c01-b5d6-27e906c22011","leftValue":"={{ $json.created }}","rightValue":true,"operator":{"type":"boolean","operation":"true","singleValue":true}}],"combinator":"and"},"options":{}},
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22011",
+      "name": "New request?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [50, -280]
+    },
+    {
+      "parameters": {"respondWith":"json","responseBody":"={{ { ok: true, status: 'duplicate', requestDbId: $json.requestDbId, executionGate: false, externalActions: { crmWrites: 0, tasksCreated: 0, messagesSent: 0 } } }}","options":{"responseCode":200}},
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22012",
+      "name": "Return existing request status",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [300, -300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const intake=$('Validate and normalize request').first().json;const persisted=$json;const requestId=persisted.requestDbId;const d=intake.normalized;const queryText=[d.processDescription,...d.goals,...d.currentTools].join(' ');const D=1536,stop=new Set(['a','an','and','are','as','at','be','bei','by','das','dem','den','der','die','ein','eine','for','from','für','im','in','ist','it','mit','of','on','or','the','to','und','von','with','zu']);const norm=v=>String(v??'').replace(/\\s+/g,' ').trim();const tokens=v=>norm(v).toLocaleLowerCase('de-DE').match(/[\\p{L}\\p{N}][\\p{L}\\p{N}_-]*/gu)?.filter(t=>t.length>1&&!stop.has(t))??[];const hash=v=>{let h=0x811c9dc5;for(let i=0;i<v.length;i++){h^=v.charCodeAt(i);h=Math.imul(h,0x01000193)}return h>>>0};const vec=new Array(D).fill(0);for(const t of tokens(queryText)){const h=hash(t),s=hash('sign:'+t);vec[h%D]+=s%2?-1:1}const length=Math.hypot(...vec);const embedding='['+vec.map(n=>Number(length?n/length:0).toFixed(8)).join(',')+']';return[{json:{requestDbId:requestId,requestKey:d.idempotencyKey,created:persisted.created,intake:{requestId,schemaVersion:'1.0',status:'accepted',data:{companyName:d.companyName,processDescription:d.processDescription,currentTools:d.currentTools,goals:d.goals,constraints:d.constraints}},warnings:intake.warnings,queryText,queryEmbedding:embedding}}];"
+      },
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22005",
+      "name": "Prepare bounded research and RAG query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [80, -100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH input AS (SELECT NULLIF($1::jsonb->>'queryEmbedding','')::vector AS query_embedding,COALESCE($1::jsonb->>'queryText','') AS query_text), scored AS (SELECT c.source_id,c.source_name,c.source_url,c.chunk_index,c.content,c.metadata,1-(c.embedding<=>input.query_embedding) AS semantic_score,ts_rank_cd(c.search_vector,plainto_tsquery('simple',input.query_text)) AS lexical_score FROM knowledge_chunks c CROSS JOIN input WHERE c.embedding IS NOT NULL AND input.query_embedding IS NOT NULL) SELECT source_id,source_name,source_url,chunk_index,content,metadata,semantic_score,lexical_score,semantic_score*0.85+lexical_score*0.15 AS retrieval_score FROM scored ORDER BY retrieval_score DESC,source_id,chunk_index LIMIT 5;",
+        "options": {"queryReplacement": "={{ JSON.stringify({ queryText: $json.queryText, queryEmbedding: $json.queryEmbedding }) }}"}
+      },
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22006",
+      "name": "Retrieve internal knowledge",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [330, -100],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const base=$('Prepare bounded research and RAG query').first().json;const chunks=$input.all().map(({json})=>json);const tools=base.intake.data.currentTools;const catalog={hubspot:['CRM records','contacts','webhooks'],notion:['databases','API integration'],slack:['notifications','API integration'],n8n:['workflow automation','webhooks','API integration'],zapier:['workflow automation','webhooks'],make:['workflow automation','webhooks'],'make.com':['workflow automation','webhooks'],salesforce:['CRM records','API integration'],'google sheets':['tabular data','API integration'],gmail:['email drafts','API integration']};const known=tools.filter(t=>catalog[t.toLowerCase()]);const unknown=tools.filter(t=>!catalog[t.toLowerCase()]);const unknowns=[];if(!tools.length)unknowns.push('Current tools are not specified.');if(unknown.length)unknowns.push('The local catalog does not cover: '+unknown.join(', ')+'.');if(base.intake.data.constraints.dataSensitivity==='unknown')unknowns.push('Data sensitivity must be clarified.');if(!chunks.length)unknowns.push('No matching internal knowledge source was found.');const research={status:unknowns.length?'needs-human-input':'completed',data:{researchMode:'local-synthetic-tool-catalog-v1',facts:[{statement:'Company provided: '+base.intake.data.companyName,sourceRef:'validated-intake.companyName'},...known.map(t=>({statement:t+' is listed in the local integration catalog: '+catalog[t.toLowerCase()].join(', '),sourceRef:'local-tool-catalog:'+t}))],unknowns,externalActions:{contactedCompanies:false,webRequests:0,dataModified:false}}};const sources=chunks.map(c=>({sourceId:c.source_id,sourceName:c.source_name,sourceUrl:c.source_url,chunkIndex:c.chunk_index,content:c.content,retrievalScore:Number(c.retrieval_score)}));const description=base.intake.data.processDescription;const blueprint={blueprintVersion:'local-deterministic-v1',companyScope:base.intake.data.companyName,trigger:/lead|form|email|inquiry|anfrage/i.test(description)?{type:'webhook-or-form-event',description:'A validated inbound request or lead event starts the workflow.'}:{type:'approved-source-event',description:'A validated event from the source system starts the workflow.'},inputs:[{name:'validated request',source:'intake',sensitivity:base.intake.data.constraints.dataSensitivity}],processingSteps:[{order:1,name:'Validate and deduplicate',purpose:'Validate schema and use the idempotency key before downstream work.',deterministic:true},{order:2,name:'Retrieve approved internal guidance',purpose:'Use source-labelled knowledge chunks and retain citations.',deterministic:true},{order:3,name:'Prepare proposed records',purpose:'Prepare CRM or task payloads only for confirmed integrations.',deterministic:true},{order:4,name:'Human approval gate',purpose:'Require explicit reviewer approval before any external action.',deterministic:true}],outputs:['reviewable automation proposal','local demo draft after approval'],integrations:tools.map(system=>({system,action:'pending-confirmation',externalActionAllowed:false})),errorPaths:[{condition:'invalid input',response:'reject and audit without external action'},{condition:'duplicate idempotency key',response:'return existing request state without duplicate record'},{condition:'missing source or tool details',response:'stop for human clarification'},{condition:'external API failure after approval',response:'record recoverable failure and do not retry destructive actions automatically'}],humanApproval:{required:true,actionsBlocked:['create or update CRM records','create tasks','send messages','publish externally']},evidence:sources.map(s=>({sourceId:s.sourceId,sourceName:s.sourceName,use:'retrieved internal solution pattern'})),openQuestions:unknowns,externalActions:{executed:false,contactsCreated:0,messagesSent:0}};const risks=[];if(['personal','special-category'].includes(blueprint.inputs[0].sensitivity))risks.push({id:'personal-data',severity:'high',finding:'Personal data requires minimisation and human approval.'});if(!blueprint.errorPaths.some(p=>/duplicate/i.test(p.condition)))risks.push({id:'duplicate-records',severity:'high',finding:'Idempotency and duplicate handling must be verified.'});if(!blueprint.integrations.length)risks.push({id:'unconfirmed-integrations',severity:'medium',finding:'No target integration is confirmed.'});if(unknowns.length)risks.push({id:'open-questions',severity:'medium',finding:'Open questions remain before implementation.'});const estimateHours=12+blueprint.integrations.length*5+risks.length*2+unknowns.length*3;const result={requestDbId:base.requestDbId,requestKey:base.requestKey,created:base.created,status:unknowns.length?'needs-human-input':'awaiting-human-review',stages:{intake:base.intake,research,rag:{status:sources.length?'retrieved':'empty',sourceCount:sources.length,sources},blueprint:{status:unknowns.length?'needs-human-input':'completed',data:blueprint},riskReview:{status:'completed',data:{decision:'requires-human-review',risks,execution:{allowed:false}}},estimate:{status:unknowns.length?'needs-human-input':'completed',data:{effortHours:{lower:Math.max(8,Math.round(estimateHours*.75)),expected:estimateHours,upper:Math.round(estimateHours*1.35)},uncertainty:unknowns.length?'medium':'low',externalPricesVerified:false}}},executionGate:false,externalActions:{crmWrites:0,tasksCreated:0,messagesSent:0},warnings:[...base.warnings,...(unknowns.length?['Resolve open questions before implementation approval.']:[])]};return[{json:result}];"
+      },
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22007",
+      "name": "Run research, architect, risk and estimate agents",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [590, -100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH payload AS (SELECT $1::jsonb AS result), saved AS (INSERT INTO project_blueprints(request_id,solution_blueprint,risk_review,effort_estimate,approval_status) SELECT (result->>'requestDbId')::uuid,result->'stages'->'blueprint',result->'stages'->'riskReview',result->'stages'->'estimate','pending' FROM payload ON CONFLICT(request_id) DO UPDATE SET solution_blueprint=EXCLUDED.solution_blueprint,risk_review=EXCLUDED.risk_review,effort_estimate=EXCLUDED.effort_estimate,approval_status='pending',updated_at=NOW() RETURNING id), stage_rows AS (SELECT (result->>'requestDbId')::uuid AS request_id,stage.key,stage.value FROM payload CROSS JOIN LATERAL jsonb_each(result->'stages') AS stage(key,value)), audited AS (INSERT INTO audit_events(request_id,event_type,actor,details) SELECT request_id,'agent-stage-completed',CASE key WHEN 'intake' THEN 'Intake Agent' WHEN 'research' THEN 'Research Agent' WHEN 'rag' THEN 'RAG Agent' WHEN 'blueprint' THEN 'Solution Architect Agent' WHEN 'riskReview' THEN 'Risk Reviewer' WHEN 'estimate' THEN 'Estimation Agent' ELSE key END,jsonb_build_object('stage',key,'status',COALESCE(value->>'status','completed'),'promptVersion','local-deterministic-v1','modelName',NULL,'inputTokens',0,'outputTokens',0,'estimatedCostUsd',0,'executionGate',false) FROM stage_rows RETURNING id) SELECT (SELECT id::text FROM saved) AS blueprint_id,(SELECT COUNT(*) FROM audited)::int AS audit_events_written,(SELECT result FROM payload) AS result;",
+        "options": {"queryReplacement": "={{ JSON.stringify($json) }}"}
+      },
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22008",
+      "name": "Persist blueprint and stage audit",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [850, -100],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {"respondWith":"json","responseBody":"={{ { ok: true, blueprintId: $json.blueprint_id, auditEventsWritten: $json.audit_events_written, ...$json.result } }}","options":{"responseCode":202}},
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22009",
+      "name": "Return plan for human review",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1110, -100]
+    },
+    {
+      "parameters": {"respondWith":"json","responseBody":"={{ { ok: false, status: 'rejected', errors: $json.errors, warnings: $json.warnings } }}","options":{"responseCode":422}},
+      "id": "be8ba8ac-ecc4-4c01-b5d6-27e906c22010",
+      "name": "Reject invalid request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [-160, 150]
+    }
+  ],
+  "connections": {
+    "Receive operations request": {"main":[[{"node":"Validate and normalize request","type":"main","index":0}]]},
+    "Validate and normalize request": {"main":[[{"node":"Request valid?","type":"main","index":0}]]},
+    "Request valid?": {"main":[[{"node":"Persist or resolve request","type":"main","index":0}],[{"node":"Reject invalid request","type":"main","index":0}]]},
+    "Persist or resolve request": {"main":[[{"node":"New request?","type":"main","index":0}]]},
+    "New request?": {"main":[[{"node":"Prepare bounded research and RAG query","type":"main","index":0}],[{"node":"Return existing request status","type":"main","index":0}]]},
+    "Prepare bounded research and RAG query": {"main":[[{"node":"Retrieve internal knowledge","type":"main","index":0}]]},
+    "Retrieve internal knowledge": {"main":[[{"node":"Run research, architect, risk and estimate agents","type":"main","index":0}]]},
+    "Run research, architect, risk and estimate agents": {"main":[[{"node":"Persist blueprint and stage audit","type":"main","index":0}]]},
+    "Persist blueprint and stage audit": {"main":[[{"node":"Return plan for human review","type":"main","index":0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder":"v1"},
+  "versionId":"00000000-0000-4000-8000-000000000007",
+  "meta":{"templateCredsSetupCompleted":false},
+  "tags":[]
+}
+

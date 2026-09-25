@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Local Ollama to n8n receipt workflow</title>
+  <desc id="desc">A host-side adapter sends synthetic intake to the deterministic Operations Hub, passes approved RAG evidence to local Ollama, retries an uncited answer at most once, and stops if no approved source is cited. The separate n8n receipt independently rejects empty citations before persisting an agent-run and audit event in PostgreSQL. No external actions are enabled.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59708a"/></marker>
+    <style>
+      text{font-family:Inter,Segoe UI,Arial,sans-serif;fill:#172b4d}.title{font-size:25px;font-weight:700}.sub{font-size:14px;fill:#52657d}.head{font-size:16px;font-weight:700}.body{font-size:13px;fill:#364b63}.tag{font-size:11px;font-weight:700;letter-spacing:.04em}.arrow{stroke:#59708a;stroke-width:2.2;fill:none;marker-end:url(#arrow)}.box{stroke-width:1.5;rx:15}
+    </style>
+  </defs>
+  <rect width="1200" height="420" rx="20" fill="#f5f8fc"/>
+  <text x="42" y="48" class="title">Lokaler Ollama-Interpretationspilot</text>
+  <text x="42" y="73" class="sub">Host-initiierter KI-Schritt · synthetische Daten · Advisory-only · keine externe Ausführung</text>
+
+  <rect x="42" y="132" width="190" height="136" class="box" fill="#e8f1ff" stroke="#8eb4e8"/>
+  <text x="62" y="163" class="tag" fill="#285d9d">HOST-ADAPTER</text>
+  <text x="62" y="191" class="head">Pilot Runner</text>
+  <text x="62" y="216" class="body">synthetisches Intake</text>
+  <text x="62" y="237" class="body">PII wird ausgelassen</text>
+
+  <rect x="286" y="132" width="196" height="136" class="box" fill="#e8f7f1" stroke="#88cbb0"/>
+  <text x="306" y="163" class="tag" fill="#247252">n8n · WORKFLOW 07</text>
+  <text x="306" y="191" class="head">Planung &amp; RAG</text>
+  <text x="306" y="216" class="body">deterministische Route</text>
+  <text x="306" y="237" class="body">freigegebene Belege</text>
+
+  <rect x="536" y="132" width="190" height="136" class="box" fill="#f2ecff" stroke="#b59be8"/>
+  <text x="556" y="163" class="tag" fill="#6743a5">LOCAL MODEL</text>
+  <text x="556" y="191" class="head">Ollama · Qwen 3.5</text>
+  <text x="556" y="216" class="body">begrenzte JSON-Ausgabe</text>
+  <text x="556" y="237" class="body">max. 1 Quellen-Retry</text>
+
+  <rect x="780" y="132" width="190" height="136" class="box" fill="#fff3df" stroke="#edbd6a"/>
+  <text x="800" y="163" class="tag" fill="#976211">n8n · WORKFLOW 09</text>
+  <text x="800" y="191" class="head">Receipt Validator</text>
+  <text x="800" y="216" class="body">Schema &amp; Quellen prüfen</text>
+  <text x="800" y="237" class="body">ohne Quelle: HTTP 422</text>
+
+  <rect x="1024" y="132" width="134" height="136" class="box" fill="#e8f7f1" stroke="#88cbb0"/>
+  <text x="1044" y="163" class="tag" fill="#247252">POSTGRES</text>
+  <text x="1044" y="191" class="head">Audit</text>
+  <text x="1044" y="216" class="body">agent_runs</text>
+  <text x="1044" y="237" class="body">+ audit event</text>
+
+  <path d="M232 200H278" class="arrow"/>
+  <path d="M482 200H528" class="arrow"/>
+  <path d="M726 200H772" class="arrow"/>
+  <path d="M970 200H1016" class="arrow"/>
+
+  <rect x="42" y="315" width="1116" height="64" rx="12" fill="#fff" stroke="#d4deea"/>
+  <text x="64" y="342" class="head" font-size="14">Nachweis</text>
+  <text x="150" y="342" class="body">7,256 s lokaler Modellschritt · 1 Agent-Run · 1 Audit-Event · executionGate=false · externe Aktionen: 0</text>
+  <text x="64" y="365" class="sub">Frischer isolierter Import geprüft: Name/ID korrekt, Workflow nicht aktiviert, keine Credentials übertragen. Diese Grafik ist eine Architekturillustration, kein n8n-Screenshot.</text>
+</svg>
+

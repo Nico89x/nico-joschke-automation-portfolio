@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Nico Joschkes Portfolio für n8n, Workflow Automation, AI Automation und API-Integrationen – mit fünf bereinigten Workflow-Exporten und nachvollziehbaren Fallstudien." />
+    <meta name="description" content="Nico Joschkes Portfolio für n8n, Workflow Automation, lokale AI, RAG und API-Integrationen – mit vier nachvollziehbaren Fallstudien und prüfbaren Workflow-Exporten." />
     <title>Nico Joschke – Automation Portfolio</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -24,7 +24,7 @@
         <div class="hero-copy">
           <p class="eyebrow">n8n · Workflow Automation · AI · APIs</p>
           <h1 id="hero-title">Workflow Automation mit sichtbarer Engineering-Logik.</h1>
-          <p class="lede">Ich entwickle nachvollziehbare n8n-Systeme mit Datenvalidierung, API-Anbindungen, Fehlerpfaden und menschlichen Freigaben. Hier zeige ich fünf eigenständig entwickelte und getestete Portfolio-Workflows – transparent auf Junior-/Associate-Niveau eingeordnet.</p>
+          <p class="lede">Ich entwickle nachvollziehbare n8n-Systeme mit Datenvalidierung, API-Anbindungen, RAG, Fehlerpfaden und menschlichen Freigaben. Vier Fallstudien zeigen die technische Umsetzung – transparent als eigenständig entwickelte Portfolio- und Testsysteme eingeordnet.</p>
           <div class="hero-actions">
             <a class="button primary" href="#projekte">Fallstudien prüfen</a>
             <a class="button secondary" href="Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf">Kurzprofil herunterladen</a>
@@ -32,47 +32,88 @@
           <div class="availability"><span aria-hidden="true"></span> Karlsruhe · Remote in Deutschland · Vollzeit</div>
         </div>
 
-        <div class="flow-card" aria-label="Architektur der Lead-to-Offer Automation">
+        <div class="flow-card" aria-label="Architektur des Multi-Agent AI Operations Hub">
           <div class="flow-head">
-            <span>Lead-to-Offer Pipeline</span>
-            <span class="status">portfolio validated</span>
+            <span>AI Operations Hub</span>
+            <span class="status">local · human reviewed</span>
           </div>
           <ol class="flow">
-            <li><b>01</b><span>Lead erfassen</span><small>Webhook</small></li>
-            <li><b>02</b><span>Validieren &amp; bewerten</span><small>JavaScript</small></li>
-            <li><b>03</b><span>Dubletten prüfen</span><small>Notion API</small></li>
-            <li><b>04</b><span>CRM aktualisieren</span><small>Upsert</small></li>
-            <li><b>05</b><span>Entwurf vorbereiten</span><small>Human review</small></li>
+            <li><b>01</b><span>Anfrage prüfen</span><small>Schema + Idempotenz</small></li>
+            <li><b>02</b><span>Wissen abrufen</span><small>PostgreSQL + pgvector</small></li>
+            <li><b>03</b><span>Entwurf erstellen</span><small>Deterministische Baselines</small></li>
+            <li><b>04</b><span>Lokale AI prüfen</span><small>Ollama + Quellen-Gate</small></li>
+            <li><b>05</b><span>Freigabe entscheiden</span><small>Human-in-the-loop</small></li>
           </ol>
         </div>
       </section>
 
-      <section class="proof" aria-label="Technische Nachweise">
-        <article><strong>94</strong><span>n8n-Knoten</span></article>
-        <article><strong>31</strong><span>Code-Knoten</span></article>
-        <article><strong>14</strong><span>HTTP-Schnittstellen</span></article>
-        <article><strong>5</strong><span>bereinigte Exporte</span></article>
+      <section class="proof" aria-label="Technische Nachweise des Hauptprojekts">
+        <article><strong>168</strong><span>lokale Tests bestanden</span></article>
+        <article><strong>15</strong><span>synthetische AI-Eval-Fälle</span></article>
+        <article><strong>3</strong><span>lokale Ollama/n8n-Läufe</span></article>
+        <article><strong>0</strong><span>externe Schreibaktionen</span></article>
       </section>
 
       <section id="projekte" class="section projects" aria-labelledby="projects-title">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Ausgewählte Fallstudien</p>
-            <h2 id="projects-title">Drei Systeme, von der Eingabe bis zum überprüfbaren Ergebnis.</h2>
+            <h2 id="projects-title">Vier Systeme, von der Eingabe bis zum überprüfbaren Ergebnis.</h2>
           </div>
-          <p>Die Diagramme reduzieren komplexe n8n-Workflows auf ihre fachlichen Entscheidungen. Darunter liegen die vollständigen, importierbaren JSON-Exporte.</p>
+          <p>Die Diagramme reduzieren komplexe n8n-Workflows auf ihre fachlichen Entscheidungen. Die technischen Exporte und Grenzen bleiben nachvollziehbar.</p>
         </div>
+
+        <article class="case case-featured case-flagship">
+          <div class="case-top">
+            <span class="case-index">01</span>
+            <span class="case-score">168 Tests · n8n + PostgreSQL + lokale AI</span>
+          </div>
+          <div class="case-main">
+            <div class="case-tags"><span>n8n</span><span>PostgreSQL</span><span>pgvector</span><span>Ollama</span><span>RAG</span><span>Human-in-the-loop</span></div>
+            <h3>Multi-Agent AI Operations Hub</h3>
+            <p class="case-summary">Ein lokal ausführbarer Prototyp verarbeitet unstrukturierte Automatisierungsanfragen zu prüfbaren Lösungsentwürfen. Deterministische Regeln steuern Validierung, Idempotenz, Routing und Freigaben; ein optionales lokales Modell liefert begrenzte, quellenpflichtige Interpretationshinweise.</p>
+
+            <ol class="architecture architecture-wide" aria-label="Ablauf des Multi-Agent AI Operations Hub">
+              <li><span class="node-kind">Input</span><strong>Webhook-Anfrage</strong><small>Synthetische Daten</small></li>
+              <li><span class="node-kind">Rules</span><strong>Schema &amp; Idempotenz</strong><small>Kontrollierter Stopp</small></li>
+              <li><span class="node-kind">RAG</span><strong>Wissensabruf</strong><small>PostgreSQL + pgvector</small></li>
+              <li><span class="node-kind">Design</span><strong>Lösungsentwurf</strong><small>Risiko + Aufwand</small></li>
+              <li><span class="node-kind">Local AI</span><strong>Ollama-Hinweis</strong><small>Schema + Quellen-ID</small></li>
+              <li><span class="node-kind">Review</span><strong>Menschliche Prüfung</strong><small>Einmalige Entscheidung</small></li>
+              <li><span class="node-kind">Output</span><strong>Lokaler Entwurf</strong><small>Keine externe Aktion</small></li>
+            </ol>
+
+            <div class="case-grid">
+              <div><h4>Geschäftsproblem</h4><p>Freitext-Anfragen müssen vor Umsetzung strukturiert, auf Lücken geprüft und mit passenden technischen Mustern verbunden werden.</p></div>
+              <div><h4>Engineering-Entscheidung</h4><p>KI bleibt auf Interpretation begrenzt. Validierung, Berechtigungen, Kostenregeln und Routing sind deterministisch.</p></div>
+              <div><h4>Sicherheitsgrenze</h4><p>Das Ausführungstor bleibt bis zur namentlichen Freigabe geschlossen; selbst danach entsteht nur ein lokaler synthetischer Entwurf.</p></div>
+            </div>
+
+            <details class="evidence-panel">
+              <summary>Testergebnisse und ehrliche Grenze</summary>
+              <div class="details-grid">
+                <div><strong>Nachweise</strong><p>168 lokale Tests bestanden. Drei synthetische Ollama/n8n-Läufe wurden dokumentiert. Ein vorab markierter 15-Fall-Satz akzeptierte 14 belegte Entwürfe.</p></div>
+                <div><strong>Grenze</strong><p>Ein Fall wurde trotz vorhandener passender Quelle gestoppt. Der kleine synthetische Test ist keine Produktionsvalidierung und kein Nachweis autonomer Agentenqualität.</p></div>
+              </div>
+            </details>
+
+            <div class="file-links" aria-label="Nachweise zum Multi-Agent AI Operations Hub">
+              <a href="multi-agent-ai-operations-hub.html">Fallstudie öffnen</a>
+              <a href="operations-hub-central-workflow.json" download>Zentralen n8n-Workflow prüfen</a>
+              <a href="operations-hub-local-ai-receipt.json" download>AI-Prüfworkflow prüfen</a>
+            </div>
+          </div>
+        </article>
 
         <article class="case case-featured">
           <div class="case-top">
-            <span class="case-index">01</span>
+            <span class="case-index">02</span>
             <span class="case-score">49 Knoten · 3 Workflows</span>
           </div>
           <div class="case-main">
             <div class="case-tags"><span>n8n</span><span>Webhooks</span><span>REST</span><span>CRM</span><span>JavaScript</span></div>
             <h3>Lead-to-Offer Automation Suite</h3>
             <p class="case-summary">Drei gekoppelte Workflows übernehmen Lead-Eingang, Validierung, Scoring, Dublettenprüfung, CRM-Aktualisierung und die Vorbereitung interner Angebotsentwürfe.</p>
-
             <ol class="architecture architecture-wide" aria-label="Ablauf der Lead-to-Offer Automation">
               <li><span class="node-kind">Input</span><strong>Website-Webhook</strong><small>Formulardaten</small></li>
               <li><span class="node-kind">Rules</span><strong>Validierung</strong><small>Pflichtfelder, Spam, DSGVO</small></li>
@@ -82,84 +123,39 @@
               <li><span class="node-kind">Output</span><strong>Benachrichtigung</strong><small>Getrennte Fehlerpfade</small></li>
               <li><span class="node-kind">Review</span><strong>Angebotsentwurf</strong><small>Kein Auto-Versand</small></li>
             </ol>
-
             <div class="case-grid">
               <div><h4>Geschäftsproblem</h4><p>Anfragen sollen vollständig, priorisiert und ohne doppelte CRM-Einträge verarbeitet werden.</p></div>
               <div><h4>Technische Entscheidung</h4><p>Validierungs-, Speicher- und Benachrichtigungsfehler laufen über getrennte, nachvollziehbare Pfade.</p></div>
               <div><h4>Sicherheitsgrenze</h4><p>Angebote werden ausschließlich als interne Entwürfe erzeugt und müssen manuell freigegeben werden.</p></div>
             </div>
-
-            <details class="evidence-panel">
-              <summary>Prüfbare Details und Grenzen</summary>
-              <div class="details-grid">
-                <div><strong>Nachweise</strong><p>14 Code-Knoten, neun dokumentierte Entscheidungspfade, Beispiel-Testdaten und explizite Webhook-Antworten.</p></div>
-                <div><strong>Produktionsschritte</strong><p>Rate-Limiting, zentrale Konfiguration, Aufbewahrungsregeln für personenbezogene Daten und Retry-Strategien ergänzen.</p></div>
-              </div>
-            </details>
-
-            <div class="file-links" aria-label="Technische Dateien zur Lead-to-Offer Automation">
-              <a href="lead-intake-system.sanitized.json" download>Lead Intake JSON</a>
-              <a href="crm-system.sanitized.json" download>CRM Router JSON</a>
-              <a href="offer-generator.sanitized.json" download>Offer Generator JSON</a>
-            </div>
+            <details class="evidence-panel"><summary>Prüfbare Details und Grenzen</summary><div class="details-grid"><div><strong>Nachweise</strong><p>14 Code-Knoten, neun dokumentierte Entscheidungspfade, Beispiel-Testdaten und explizite Webhook-Antworten.</p></div><div><strong>Produktionsschritte</strong><p>Rate-Limiting, zentrale Konfiguration, Aufbewahrungsregeln für personenbezogene Daten und Retry-Strategien ergänzen.</p></div></div></details>
+            <div class="file-links"><a href="lead-intake-system.sanitized.json" download>Lead Intake JSON</a><a href="crm-system.sanitized.json" download>CRM Router JSON</a><a href="offer-generator.sanitized.json" download>Offer Generator JSON</a></div>
           </div>
         </article>
 
         <div class="case-row">
           <article class="case">
-            <div class="case-top">
-              <span class="case-index">02</span>
-              <span class="case-score">23 Knoten · AI Workflow</span>
-            </div>
+            <div class="case-top"><span class="case-index">03</span><span class="case-score">23 Knoten · AI Workflow</span></div>
             <div class="case-main">
               <div class="case-tags"><span>LLM</span><span>Structured JSON</span><span>Evidence</span><span>Human-in-the-loop</span></div>
               <h3>Evidence-based Outreach Intelligence</h3>
               <p class="case-summary">Website-Signale werden extrahiert, als begrenzter AI-Kontext verarbeitet und als überprüfbarer Kontaktentwurf im CRM gespeichert.</p>
-              <ol class="architecture architecture-compact" aria-label="Ablauf der Outreach Intelligence">
-                <li><span class="node-kind">CRM</span><strong>Queue</strong><small>Neu + dedupliziert</small></li>
-                <li><span class="node-kind">HTTP</span><strong>Website-Evidenz</strong><small>Signale + Textauszug</small></li>
-                <li><span class="node-kind">AI</span><strong>Strukturierter Entwurf</strong><small>JSON-Schema</small></li>
-                <li><span class="node-kind">Gate</span><strong>Ergebnisprüfung</strong><small>Erfolg oder Fehler</small></li>
-                <li><span class="node-kind">Review</span><strong>CRM-Entwurf</strong><small>Kein Versand</small></li>
-              </ol>
-              <ul class="check-list">
-                <li>Website-Evidenz statt erfundener Personalisierung</li>
-                <li>Strukturierter Output-Parser und eigener AI-Fehlerpfad</li>
-                <li>Menschliche Prüfung bleibt verpflichtend</li>
-              </ul>
-              <details class="evidence-panel">
-                <summary>Technische Grenze</summary>
-                <p>Für Produktion würde ich URL-Allowlisting und eine explizite Prompt-Injection-Abwehr vor dem Website-Abruf ergänzen.</p>
-              </details>
+              <ol class="architecture architecture-compact"><li><span class="node-kind">CRM</span><strong>Queue</strong><small>Neu + dedupliziert</small></li><li><span class="node-kind">HTTP</span><strong>Website-Evidenz</strong><small>Signale + Textauszug</small></li><li><span class="node-kind">AI</span><strong>Strukturierter Entwurf</strong><small>JSON-Schema</small></li><li><span class="node-kind">Gate</span><strong>Ergebnisprüfung</strong><small>Erfolg oder Fehler</small></li><li><span class="node-kind">Review</span><strong>CRM-Entwurf</strong><small>Kein Versand</small></li></ol>
+              <ul class="check-list"><li>Website-Evidenz statt erfundener Personalisierung</li><li>Strukturierter Output-Parser und eigener AI-Fehlerpfad</li><li>Menschliche Prüfung bleibt verpflichtend</li></ul>
+              <details class="evidence-panel"><summary>Technische Grenze</summary><p>Für Produktion würde ich URL-Allowlisting und eine explizite Prompt-Injection-Abwehr vor dem Website-Abruf ergänzen.</p></details>
               <div class="file-links"><a href="outreach-intelligence.sanitized.json" download>Workflow JSON prüfen</a></div>
             </div>
           </article>
 
           <article class="case">
-            <div class="case-top">
-              <span class="case-index">03</span>
-              <span class="case-score">22 Knoten · Research Pipeline</span>
-            </div>
+            <div class="case-top"><span class="case-index">04</span><span class="case-score">22 Knoten · Research Pipeline</span></div>
             <div class="case-main">
               <div class="case-tags"><span>Research</span><span>API</span><span>Deduplication</span><span>Scoring</span></div>
               <h3>Market Opportunity Research</h3>
               <p class="case-summary">Ein Recherche-Workflow sammelt Betriebe, normalisiert Datensätze, erkennt Dubletten und bewertet neue Chancen vor der CRM-Ablage.</p>
-              <ol class="architecture architecture-compact" aria-label="Ablauf der Market Opportunity Research">
-                <li><span class="node-kind">Input</span><strong>Suchaufträge</strong><small>Branche + Region</small></li>
-                <li><span class="node-kind">API</span><strong>Betriebsdaten</strong><small>Recherchequelle</small></li>
-                <li><span class="node-kind">Logic</span><strong>Normalisierung</strong><small>Domain, Telefon, Name/Ort</small></li>
-                <li><span class="node-kind">AI</span><strong>Chancenbewertung</strong><small>Strukturiertes Schema</small></li>
-                <li><span class="node-kind">Output</span><strong>CRM + Summary</strong><small>Ergebnis und Fehlerzahl</small></li>
-              </ol>
-              <ul class="check-list">
-                <li>Mehrstufige Deduplizierung über vier Schlüssel</li>
-                <li>AI-Ausgabe mit Wertebereich und Fallback</li>
-                <li>Run Summary für neue Leads, Dubletten und Fehler</li>
-              </ul>
-              <details class="evidence-panel">
-                <summary>Technische Grenze</summary>
-                <p>Für größere Datenmengen sind CRM-Pagination, API-Retries und Backoff sowie eine zentrale Konfiguration die nächsten Schritte.</p>
-              </details>
+              <ol class="architecture architecture-compact"><li><span class="node-kind">Input</span><strong>Suchaufträge</strong><small>Branche + Region</small></li><li><span class="node-kind">API</span><strong>Betriebsdaten</strong><small>Recherchequelle</small></li><li><span class="node-kind">Logic</span><strong>Normalisierung</strong><small>Domain, Telefon, Name/Ort</small></li><li><span class="node-kind">AI</span><strong>Chancenbewertung</strong><small>Strukturiertes Schema</small></li><li><span class="node-kind">Output</span><strong>CRM + Summary</strong><small>Ergebnis und Fehlerzahl</small></li></ol>
+              <ul class="check-list"><li>Mehrstufige Deduplizierung über vier Schlüssel</li><li>AI-Ausgabe mit Wertebereich und Fallback</li><li>Run Summary für neue Leads, Dubletten und Fehler</li></ul>
+              <details class="evidence-panel"><summary>Technische Grenze</summary><p>Für größere Datenmengen sind CRM-Pagination, API-Retries und Backoff sowie eine zentrale Konfiguration die nächsten Schritte.</p></details>
               <div class="file-links"><a href="handwerk-opportunity.sanitized.json" download>Workflow JSON prüfen</a></div>
             </div>
           </article>
@@ -167,77 +163,24 @@
       </section>
 
       <section id="qualitaet" class="section quality" aria-labelledby="quality-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Qualität und Transparenz</p>
-            <h2 id="quality-title">Was geprüft ist – und was bewusst nicht behauptet wird.</h2>
-          </div>
-          <p>Gute Automation zeigt nicht nur den Happy Path. Sie macht Annahmen, Fehlerzustände und die Grenze zur Produktion sichtbar.</p>
-        </div>
-
+        <div class="section-heading"><div><p class="eyebrow">Qualität und Transparenz</p><h2 id="quality-title">Was geprüft ist – und was bewusst nicht behauptet wird.</h2></div><p>Gute Automation zeigt nicht nur den Happy Path. Sie macht Annahmen, Fehlerzustände und die Grenze zur Produktion sichtbar.</p></div>
         <div class="quality-grid">
-          <article>
-            <span class="quality-mark">01</span>
-            <h3>Bereinigt</h3>
-            <p>Credential-Verweise und Zugangsdaten wurden entfernt. Testadressen verwenden reservierte Beispieldomains.</p>
-          </article>
-          <article>
-            <span class="quality-mark">02</span>
-            <h3>Sicher deaktiviert</h3>
-            <p>Alle veröffentlichten Workflows sind standardmäßig deaktiviert und lösen nach dem Import keine externen Aktionen aus.</p>
-          </article>
-          <article>
-            <span class="quality-mark">03</span>
-            <h3>Strukturell geprüft</h3>
-            <p>Alle fünf JSON-Dateien sind parsebar; Verbindungen verweisen auf vorhandene Knoten und die Kernpfade sind dokumentiert.</p>
-          </article>
-          <article>
-            <span class="quality-mark">04</span>
-            <h3>Ehrlich eingeordnet</h3>
-            <p>Es handelt sich um eigenständig entwickelte Portfolio- und Testsysteme, nicht um behauptete produktive Kundenprojekte.</p>
-          </article>
+          <article><span class="quality-mark">01</span><h3>Bereinigt</h3><p>Credential-Verweise und Zugangsdaten wurden entfernt. Testadressen verwenden reservierte Beispieldomains.</p></article>
+          <article><span class="quality-mark">02</span><h3>Sicher deaktiviert</h3><p>Veröffentlichte Workflow-Exporte sind standardmäßig deaktiviert und lösen nach dem Import keine externen Aktionen aus.</p></article>
+          <article><span class="quality-mark">03</span><h3>Geprüft</h3><p>Exporte sind parsebar; Verbindungen verweisen auf vorhandene Knoten. Der Operations Hub wurde zusätzlich mit lokalen automatisierten Tests geprüft.</p></article>
+          <article><span class="quality-mark">04</span><h3>Ehrlich eingeordnet</h3><p>Es handelt sich um eigenständig entwickelte Portfolio- und Testsysteme, nicht um behauptete produktive Kundenprojekte.</p></article>
         </div>
-
-        <div class="engineering-next">
-          <div>
-            <p class="eyebrow">Nächste Engineering-Schritte</p>
-            <h3>So würde ich die Systeme für Produktion weiterentwickeln.</h3>
-          </div>
-          <ul>
-            <li><strong>Resilienz:</strong> Retry, Backoff, Dead-Letter-Pfad und kontrolliertes Replay</li>
-            <li><strong>Sicherheit:</strong> URL-Allowlisting, SSRF-Schutz und Prompt-Injection-Grenzen</li>
-            <li><strong>Wartbarkeit:</strong> gemeinsame Logik in Subworkflows und zentrale Konfiguration</li>
-            <li><strong>Datenschutz:</strong> definierte Speicherfristen und minimierte Ausführungsdaten</li>
-          </ul>
-        </div>
+        <div class="engineering-next"><div><p class="eyebrow">Nächste Engineering-Schritte</p><h3>So würde ich die Systeme für Produktion weiterentwickeln.</h3></div><ul><li><strong>Resilienz:</strong> Retry, Backoff, Dead-Letter-Pfad und kontrolliertes Replay</li><li><strong>Sicherheit:</strong> URL-Allowlisting, SSRF-Schutz und Prompt-Injection-Grenzen</li><li><strong>Wartbarkeit:</strong> gemeinsame Logik in Subworkflows und zentrale Konfiguration</li><li><strong>Validierung:</strong> größere Eval-Sätze, semantische Quellenprüfung und reproduzierbare CI-Läufe</li></ul></div>
       </section>
 
       <section id="profil" class="section profile" aria-labelledby="profile-title">
-        <div class="profile-copy">
-          <p class="eyebrow">Arbeitsweise</p>
-          <h2 id="profile-title">Technisch neugierig. Sorgfältig in der Einordnung.</h2>
-          <p>Mein Schwerpunkt liegt auf n8n-Orchestrierung, Webhooks, REST/HTTP, JSON, JavaScript-Code-Knoten, CRM-Prozessen und strukturierten LLM-Ausgaben. Zusätzlich habe ich mit PostgreSQL, pgvector und Docker Compose ein lokales RAG-Testsystem aufgebaut.</p>
-          <p class="honesty">Ich suche den Einstieg auf Junior-/Associate-Niveau mit Raum, meine nachgewiesene technische Praxis in reale Automations- und Integrationsprojekte zu übertragen.</p>
-        </div>
-        <div class="skills" aria-label="Technologien und Methoden">
-          <span>n8n</span><span>REST APIs</span><span>Webhooks</span><span>JSON</span><span>JavaScript</span><span>CRM Automation</span><span>OpenAI / LLM</span><span>Structured Output</span><span>RAG</span><span>PostgreSQL</span><span>pgvector</span><span>Docker Compose</span><span>Testing</span><span>Documentation</span><span>Human-in-the-loop</span>
-        </div>
+        <div class="profile-copy"><p class="eyebrow">Arbeitsweise</p><h2 id="profile-title">Technisch neugierig. Sorgfältig in der Einordnung.</h2><p>Mein Schwerpunkt liegt auf n8n-Orchestrierung, Webhooks, REST/HTTP, JSON, JavaScript-Code-Knoten, CRM-Prozessen und strukturierten LLM-Ausgaben. Zusätzlich arbeite ich mit PostgreSQL, pgvector, Docker Compose und lokalen Ollama-Modellen.</p><p class="honesty">Ich suche den Einstieg auf Junior-/Associate-Niveau mit Raum, meine nachgewiesene technische Praxis in reale Automations- und Integrationsprojekte zu übertragen.</p></div>
+        <div class="skills"><span>n8n</span><span>REST APIs</span><span>Webhooks</span><span>JSON</span><span>JavaScript</span><span>CRM Automation</span><span>Local LLM / Ollama</span><span>Structured Output</span><span>RAG</span><span>PostgreSQL</span><span>pgvector</span><span>Docker Compose</span><span>Testing</span><span>Documentation</span><span>Human-in-the-loop</span></div>
       </section>
 
-      <section class="section closing" aria-label="Bewerbungsprofil herunterladen">
-        <p class="eyebrow">Für Bewerbungsgespräche</p>
-        <h2>Die wichtigsten Nachweise auf zwei Seiten.</h2>
-        <p>Das Kurzprofil fasst Positionierung, Projekterfahrung und technische Schwerpunkte recruiterfreundlich zusammen. Die vollständigen Workflows bleiben auf GitHub überprüfbar.</p>
-        <div class="hero-actions">
-          <a class="button primary" href="Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf">Kurzprofil herunterladen</a>
-          <a class="button dark" href="https://github.com/Nico89x/nico-joschke-automation-portfolio">GitHub-Repository öffnen</a>
-        </div>
-      </section>
+      <section class="section closing"><p class="eyebrow">Für Bewerbungsgespräche</p><h2>Die wichtigsten Nachweise auf einen Blick.</h2><p>Die Fallstudien zeigen Problem, Architektur, Sicherheitsgrenzen und technische Exporte. Das Kurzprofil fasst meine Positionierung recruiterfreundlich zusammen.</p><div class="hero-actions"><a class="button primary" href="Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf">Kurzprofil herunterladen</a><a class="button dark" href="https://github.com/Nico89x/nico-joschke-automation-portfolio">GitHub-Repository öffnen</a></div></section>
     </main>
 
-    <footer>
-      <span>Nico Joschke · Automation Portfolio</span>
-      <span>Portfolio- und Testsysteme · Stand September 2026</span>
-    </footer>
+    <footer><span>Nico Joschke · Automation Portfolio</span><span>Portfolio- und Testsysteme · Stand September 2026</span></footer>
   </body>
 </html>
