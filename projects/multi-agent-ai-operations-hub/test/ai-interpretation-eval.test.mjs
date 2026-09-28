@@ -28,8 +28,11 @@ test('regression suite has 20 unique, balanced, schema-ready synthetic cases wit
 test('independent blind evaluation set has 15 unique synthetic cases across all trigger classes', () => {
   assert.equal(blind.length, 15);
   assert.equal(new Set(blind.map((fixture) => fixture.id)).size, blind.length);
-  const counts = Object.groupBy(blind, (fixture) => fixture.expectedTrigger);
-  for (const trigger of ['webhook', 'email', 'schedule', 'manual', 'unknown']) assert.equal(counts[trigger]?.length, 3);
+  const counts = blind.reduce((result, fixture) => {
+    result[fixture.expectedTrigger] = (result[fixture.expectedTrigger] ?? 0) + 1;
+    return result;
+  }, {});
+  for (const trigger of ['webhook', 'email', 'schedule', 'manual', 'unknown']) assert.equal(counts[trigger], 3);
   for (const fixture of blind) {
     assert.doesNotThrow(() => prepareAiInput(fixture.intake, fixture.sources));
     assert.ok(fixture.expectedRelevantSourceIds.length > 0);
