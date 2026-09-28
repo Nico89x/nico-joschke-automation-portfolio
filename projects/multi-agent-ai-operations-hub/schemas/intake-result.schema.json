@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://portfolio.local/schemas/intake-result.schema.json",
+  "title": "Deterministic Intake Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requestId", "schemaVersion", "valid", "status", "normalized", "warnings", "errors"],
+  "properties": {
+    "requestId": { "type": "string", "minLength": 5, "maxLength": 160 },
+    "schemaVersion": { "const": "1.0" },
+    "valid": { "type": "boolean" },
+    "status": { "enum": ["accepted", "rejected"] },
+    "normalized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["companyName", "contactName", "contactEmail", "processDescription", "currentTools", "goals", "constraints", "idempotencyKey"],
+      "properties": {
+        "companyName": { "type": "string" },
+        "contactName": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "processDescription": { "type": "string" },
+        "currentTools": { "type": "array", "items": { "type": "string" } },
+        "goals": { "type": "array", "items": { "type": "string" } },
+        "constraints": { "type": "object" },
+        "idempotencyKey": { "type": "string" }
+      }
+    },
+    "warnings": { "type": "array", "items": { "type": "string" } },
+    "errors": { "type": "array", "items": { "type": "string" } }
+  }
+}

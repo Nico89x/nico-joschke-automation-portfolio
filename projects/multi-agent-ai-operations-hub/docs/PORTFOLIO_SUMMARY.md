@@ -1,0 +1,17 @@
+# Multi-Agent AI Operations Hub – Portfolio-Kurzbeschreibung
+
+## Deutsch
+
+Der **Multi-Agent AI Operations Hub** ist ein lokal ausführbarer Prototyp für unstrukturierte Automatisierungsanfragen. Ein n8n-Workflow prüft Eingaben und Dubletten, ruft Wissen aus PostgreSQL/pgvector ab und erstellt einen nachvollziehbaren Lösungsvorschlag mit Risiko- und Aufwandshinweisen. Ein Mensch entscheidet über die Freigabe. Selbst danach erzeugt die Demo ausschließlich einen lokalen synthetischen Entwurf.
+
+Das Projekt zeigt n8n, REST-Webhooks, JavaScript, SQL, Docker, RAG-Grundlagen, Audit-Ereignisse, Idempotenz, Fehlerpfade und Human-in-the-Loop. Der zentrale n8n-Workflow `07` verwendet deterministische Agenten-Baselines und Test-Embeddings. Ein separater Hostadapter nutzt das lokale Modell `qwen3.5:4b`; sein Ergebnis wird durch den veröffentlichten n8n-Workflow `09` geprüft und gespeichert. Ein konservativer regelbasierter Schritt klassifiziert ausdrücklich genannte Start-Ereignisse. Antworten ohne Quellen-ID werden nach höchstens einem lokalen Nachprüfungsversuch gestoppt; auch `09` weist leere Quellenlisten zurück. Drei synthetische Ollama/n8n-Läufe waren erfolgreich; im aktuellen Lauf blieb `executionGate` geschlossen, und es gab null CRM-Schreibvorgänge, Aufgaben oder Nachrichten. Lokal bestanden **178 automatisierte Tests**.
+
+In einem neuen, vor der Messung festgelegten 15-Fall-Satz wurden **14 belegte Entwürfe akzeptiert; einer wurde kontrolliert gestoppt**, obwohl eine passende Quelle vorlag. Unter den akzeptierten Fällen passten im Erstlauf 14/14 und in einer Wiederholung 13/14 Trigger; die mittlere Präzision vorab markierter Quellen lag in beiden Läufen bei 85,7 %. Das zeigt Modellvarianz und ist kein Nachweis inhaltlich korrekter Empfehlungen oder produktionsreifer KI-Agenten. Die Quellen-Auszüge sind für die menschliche Prüfung sichtbar. Es werden ausschließlich synthetische Daten verwendet.
+
+## English
+
+The **Multi-Agent AI Operations Hub** is a locally runnable prototype for unstructured automation requests. An n8n workflow validates intake and duplicates, retrieves knowledge from PostgreSQL/pgvector, and produces a traceable implementation proposal with risk and effort notes. A named person makes the review decision. Even after approval, the demo prepares only a local synthetic draft.
+
+The project demonstrates n8n, REST webhooks, JavaScript, SQL, Docker, RAG foundations, audit events, idempotency, failure paths, and human review. The central n8n workflow `07` uses deterministic agent baselines and test embeddings. A separate host adapter calls local `qwen3.5:4b`; published n8n workflow `09` validates and stores its advisory result. A conservative rule resolves explicit start events. Uncited outputs are stopped after at most one local retry, and workflow `09` independently rejects empty citation lists. Three synthetic Ollama/n8n runs completed successfully; the latest kept `executionGate` closed with zero CRM writes, tasks, or messages. **178 local automated tests** passed.
+
+In a newly authored, prelabelled 15-case validation set, **14 source-cited advisories were accepted and one was safely stopped**, despite an applicable source being present. Among accepted cases, selected triggers matched 14/14 labels in the first run and 13/14 in a repeat; mean prelabelled citation precision was 85.7% in both. This variation is disclosed and does not establish semantic source support or production AI-agent quality. Cited excerpts remain visible for human assessment. Only synthetic data is used.

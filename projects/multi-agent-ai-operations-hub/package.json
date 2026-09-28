@@ -1,0 +1,19 @@
+{
+  "name": "multi-agent-ai-operations-hub",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "verify:exports": "node scripts/verify-public-export-safety.mjs",
+    "eval:ai:offline": "node scripts/evaluate-ai-interpretation.mjs --cases=6",
+    "eval:ai:local": "node scripts/evaluate-local-ai-interpretation.mjs",
+    "eval:ai:regression": "node scripts/evaluate-local-ai-interpretation.mjs --suite=regression-v1",
+    "eval:ai:blind": "node scripts/evaluate-local-ai-interpretation.mjs --suite=blind-v1",
+    "eval:ai:validation": "node scripts/evaluate-local-ai-interpretation.mjs --suite=validation-v3",
+    "demo:ai:local-n8n": "node scripts/run-local-ollama-n8n-pilot.mjs --live"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

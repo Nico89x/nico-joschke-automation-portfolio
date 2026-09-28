@@ -1,2 +1,3 @@
-# Auto detect text files and perform LF normalization
+# Normalize text while keeping generated PDFs byte-for-byte intact.
 * text=auto
+*.pdf binary

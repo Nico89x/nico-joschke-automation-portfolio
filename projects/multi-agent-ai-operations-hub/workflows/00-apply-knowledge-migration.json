@@ -1,0 +1,36 @@
+{
+  "name": "00 - Apply Knowledge Base Migration",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2ce22a3f-1af4-4a21-a7a2-f23e83d86b00",
+      "name": "Start migration",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-220, 0]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "ALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS source_id TEXT;\nALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS chunk_index INTEGER;\nALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS content_hash TEXT;\nALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS embedding_model TEXT;\nALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS token_count INTEGER;\nALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();\nALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS search_vector TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED;\n\nCREATE UNIQUE INDEX IF NOT EXISTS knowledge_chunks_source_chunk_idx\n  ON knowledge_chunks (source_id, chunk_index)\n  WHERE source_id IS NOT NULL AND chunk_index IS NOT NULL;\n\nCREATE INDEX IF NOT EXISTS knowledge_chunks_search_vector_idx\n  ON knowledge_chunks USING GIN (search_vector);\n",
+        "options": {}
+      },
+      "id": "20a1efae-2e95-445a-bdcc-9b08c97be701",
+      "name": "Apply knowledge migration",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [40, 0],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    }
+  ],
+  "connections": {
+    "Start migration": {
+      "main": [[{"node": "Apply knowledge migration", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "00000000-0000-4000-8000-000000000000"
+}

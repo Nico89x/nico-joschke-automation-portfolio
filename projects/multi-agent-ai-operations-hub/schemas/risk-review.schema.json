@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://portfolio.local/schemas/risk-review.schema.json",
+  "title": "Automation Risk Review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requestId", "schemaVersion", "status", "data", "warnings", "errors"],
+  "properties": { "requestId": { "type": "string" }, "schemaVersion": { "const": "1.0" }, "status": { "enum": ["completed", "rejected"] }, "data": { "type": ["object", "null"] }, "warnings": { "type": "array" }, "errors": { "type": "array" } }
+}

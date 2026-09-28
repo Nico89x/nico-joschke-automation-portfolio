@@ -1,0 +1,74 @@
+[
+  {
+    "id": "web-form-leads",
+    "intake": {
+      "processDescription": "Synthetic website leads arrive through a form and are copied manually into HubSpot; duplicates are sometimes created.",
+      "currentTools": ["n8n", "HubSpot"],
+      "goals": ["Avoid duplicate leads"],
+      "constraints": { "dataSensitivity": "personal" }
+    },
+    "sources": [{ "sourceId": "webhook-idempotency", "content": "Validate form webhooks and use an idempotency key before CRM writes." }],
+    "expectedTrigger": "webhook",
+    "expectMissingInformation": true
+  },
+  {
+    "id": "email-support-tickets",
+    "intake": {
+      "processDescription": "Synthetic support emails are manually triaged into a ticket queue and staff need a proposed routing process.",
+      "currentTools": ["Gmail", "n8n"],
+      "goals": ["Reduce manual triage"],
+      "constraints": { "dataSensitivity": "internal" }
+    },
+    "sources": [{ "sourceId": "reliability-error-handling", "content": "Record failed intake and retry only idempotent operations with bounded attempts." }],
+    "expectedTrigger": "email",
+    "expectMissingInformation": true
+  },
+  {
+    "id": "scheduled-reconciliation",
+    "intake": {
+      "processDescription": "A synthetic inventory spreadsheet needs to be checked against a demo database every night and discrepancies should become a reviewable report.",
+      "currentTools": ["Google Sheets", "PostgreSQL"],
+      "goals": ["Find reconciliation differences"],
+      "constraints": { "dataSensitivity": "internal" }
+    },
+    "sources": [{ "sourceId": "solution-discovery", "content": "Confirm the source of truth and data ownership before designing an integration." }],
+    "expectedTrigger": "schedule",
+    "expectMissingInformation": true
+  },
+  {
+    "id": "manual-approval-intake",
+    "intake": {
+      "processDescription": "An operator manually starts each synthetic vendor review after checking documents; the system should prepare a draft but never approve it itself.",
+      "currentTools": ["n8n"],
+      "goals": ["Prepare a reviewable draft"],
+      "constraints": { "dataSensitivity": "internal" }
+    },
+    "sources": [{ "sourceId": "crm-human-approval", "content": "A named reviewer must explicitly approve any external record or message action." }],
+    "expectedTrigger": "manual",
+    "expectMissingInformation": true
+  },
+  {
+    "id": "unspecified-trigger",
+    "intake": {
+      "processDescription": "The synthetic team wants less manual work but has not identified which system starts the process or which data should be used.",
+      "currentTools": [],
+      "goals": ["Clarify the automation opportunity"],
+      "constraints": { "dataSensitivity": "unknown" }
+    },
+    "sources": [{ "sourceId": "solution-discovery", "content": "Identify trigger, source system, data owner and success criteria before proposing an implementation." }],
+    "expectedTrigger": "unknown",
+    "expectMissingInformation": true
+  },
+  {
+    "id": "unconfirmed-crm-api",
+    "intake": {
+      "processDescription": "Synthetic leads from a web form should enter a CRM, but the selected CRM has no confirmed API or webhook capability.",
+      "currentTools": ["Unconfirmed CRM"],
+      "goals": ["Avoid manual lead copying"],
+      "constraints": { "dataSensitivity": "personal" }
+    },
+    "sources": [{ "sourceId": "solution-discovery", "content": "Do not assume an API exists; confirm authentication, scopes and data ownership first." }],
+    "expectedTrigger": "webhook",
+    "expectMissingInformation": true
+  }
+]

@@ -1,0 +1,146 @@
+[
+  {
+    "id": "valid-minimal",
+    "expected": "accepted",
+    "input": {
+      "companyName": "Example GmbH",
+      "processDescription": "Website leads are copied from email into the CRM manually and important context is sometimes lost.",
+      "goals": ["Prevent lost leads"],
+      "idempotencyKey": "valid-minimal-001"
+    }
+  },
+  {
+    "id": "valid-full-and-normalized",
+    "expected": "accepted",
+    "input": {
+      "companyName": " Example GmbH ",
+      "contactName": " Erika Beispiel ",
+      "contactEmail": "ERIKA@EXAMPLE.DE",
+      "processDescription": "Incoming requests should be validated, deduplicated and prepared for a controlled CRM handoff.",
+      "currentTools": ["HubSpot", "Gmail", "HubSpot"],
+      "goals": ["Reduce manual data entry", "Prevent duplicate records"],
+      "constraints": {
+        "budgetEur": 5000,
+        "deadline": "2026-12-15",
+        "dataSensitivity": "personal",
+        "requiresHumanApproval": true
+      },
+      "idempotencyKey": "valid-full-001"
+    }
+  },
+  {
+    "id": "missing-company",
+    "expected": "rejected",
+    "errorIncludes": "companyName",
+    "input": {
+      "processDescription": "Website leads are copied from email into the CRM manually and important context is sometimes lost.",
+      "goals": ["Prevent lost leads"],
+      "idempotencyKey": "missing-company-001"
+    }
+  },
+  {
+    "id": "short-description",
+    "expected": "rejected",
+    "errorIncludes": "processDescription",
+    "input": {
+      "companyName": "Example GmbH",
+      "processDescription": "Too short",
+      "goals": ["Automate"],
+      "idempotencyKey": "short-description-001"
+    }
+  },
+  {
+    "id": "missing-goals",
+    "expected": "rejected",
+    "errorIncludes": "goal",
+    "input": {
+      "companyName": "Example GmbH",
+      "processDescription": "Website leads are copied from email into the CRM manually and important context is sometimes lost.",
+      "goals": [],
+      "idempotencyKey": "missing-goals-001"
+    }
+  },
+  {
+    "id": "invalid-email",
+    "expected": "rejected",
+    "errorIncludes": "contactEmail",
+    "input": {
+      "companyName": "Example GmbH",
+      "contactEmail": "not-an-email",
+      "processDescription": "Website leads are copied from email into the CRM manually and important context is sometimes lost.",
+      "goals": ["Prevent lost leads"],
+      "idempotencyKey": "invalid-email-001"
+    }
+  },
+  {
+    "id": "short-idempotency-key",
+    "expected": "rejected",
+    "errorIncludes": "idempotencyKey",
+    "input": {
+      "companyName": "Example GmbH",
+      "processDescription": "Website leads are copied from email into the CRM manually and important context is sometimes lost.",
+      "goals": ["Prevent lost leads"],
+      "idempotencyKey": "short"
+    }
+  },
+  {
+    "id": "invalid-sensitivity",
+    "expected": "rejected",
+    "errorIncludes": "dataSensitivity",
+    "input": {
+      "companyName": "Example GmbH",
+      "processDescription": "Website leads are copied from email into the CRM manually and important context is sometimes lost.",
+      "goals": ["Prevent lost leads"],
+      "constraints": { "dataSensitivity": "secret" },
+      "idempotencyKey": "invalid-sensitivity-001"
+    }
+  },
+  {
+    "id": "sensitive-without-approval",
+    "expected": "rejected",
+    "errorIncludes": "contradicts",
+    "input": {
+      "companyName": "Health Demo GmbH",
+      "processDescription": "Documents containing synthetic health information should be classified before an employee reviews them.",
+      "goals": ["Prepare documents for manual review"],
+      "constraints": { "dataSensitivity": "special-category", "requiresHumanApproval": false },
+      "idempotencyKey": "sensitive-no-approval-001"
+    }
+  },
+  {
+    "id": "negative-budget",
+    "expected": "rejected",
+    "errorIncludes": "budgetEur",
+    "input": {
+      "companyName": "Example GmbH",
+      "processDescription": "Website leads are copied from email into the CRM manually and important context is sometimes lost.",
+      "goals": ["Prevent lost leads"],
+      "constraints": { "budgetEur": -1, "dataSensitivity": "internal" },
+      "idempotencyKey": "negative-budget-001"
+    }
+  },
+  {
+    "id": "past-deadline",
+    "expected": "rejected",
+    "errorIncludes": "past",
+    "input": {
+      "companyName": "Example GmbH",
+      "processDescription": "Website leads are copied from email into the CRM manually and important context is sometimes lost.",
+      "goals": ["Prevent lost leads"],
+      "constraints": { "deadline": "2026-09-20", "dataSensitivity": "internal" },
+      "idempotencyKey": "past-deadline-001"
+    }
+  },
+  {
+    "id": "unknown-field",
+    "expected": "rejected",
+    "errorIncludes": "unknown field",
+    "input": {
+      "companyName": "Example GmbH",
+      "processDescription": "Website leads are copied from email into the CRM manually and important context is sometimes lost.",
+      "goals": ["Prevent lost leads"],
+      "idempotencyKey": "unknown-field-001",
+      "sendEmailImmediately": true
+    }
+  }
+]

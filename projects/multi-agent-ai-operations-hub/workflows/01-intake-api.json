@@ -1,0 +1,217 @@
+{
+  "name": "01 - Deterministic Intake API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "automation-project-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9917a3ec-593d-4d38-ae54-6c3ca77aee01",
+      "name": "Receive project request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        0
+      ],
+      "webhookId": "6de79e38-681c-40f0-a614-d25dd07aae01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const emailPattern=/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nconst datePattern=/^\\d{4}-\\d{2}-\\d{2}$/;\nconst allowed=new Set(['companyName','contactName','contactEmail','processDescription','currentTools','goals','constraints','idempotencyKey']);\nconst allowedConstraints=new Set(['budgetEur','deadline','dataSensitivity','requiresHumanApproval']);\nconst sensitivities=new Set(['public','internal','personal','special-category','unknown']);\nconst clean=v=>typeof v==='string'?v.trim():'';\nconst arr=v=>Array.isArray(v)?[...new Set(v.map(clean).filter(Boolean))]:[];\nconst isDate=value=>{if(!datePattern.test(value))return false;const date=new Date(value+'T00:00:00.000Z');return !Number.isNaN(date.getTime())&&date.toISOString().slice(0,10)===value;};\nconst payload=$json.body!==undefined?$json.body:$json;\nconst payloadIsObject=payload&&typeof payload==='object'&&!Array.isArray(payload);\nconst body=payloadIsObject?payload:{};\nconst constraintsAreObject=body.constraints===undefined||(body.constraints&&typeof body.constraints==='object'&&!Array.isArray(body.constraints));\nconst c=constraintsAreObject&&body.constraints?body.constraints:{};\nconst normalized={companyName:clean(body.companyName),contactName:clean(body.contactName),contactEmail:clean(body.contactEmail).toLowerCase(),processDescription:clean(body.processDescription),currentTools:arr(body.currentTools),goals:arr(body.goals),constraints:{...c},idempotencyKey:clean(body.idempotencyKey)};\nconst errors=[],warnings=[];\nif(!payloadIsObject)errors.push('payload must be an object');\nfor(const field of ['companyName','processDescription','idempotencyKey'])if(typeof body[field]!=='string')errors.push(field+' must be a string');\nfor(const field of ['contactName','contactEmail'])if(body[field]!==undefined&&typeof body[field]!=='string')errors.push(field+' must be a string');\nfor(const field of ['currentTools','goals']){if(body[field]!==undefined&&!Array.isArray(body[field]))errors.push(field+' must be an array');if(Array.isArray(body[field])&&body[field].some(item=>typeof item!=='string'))errors.push(field+' must contain only strings');}\nif(!constraintsAreObject)errors.push('constraints must be an object');\nfor(const key of Object.keys(body))if(!allowed.has(key))errors.push('unknown field: '+key);\nfor(const key of Object.keys(c))if(!allowedConstraints.has(key))errors.push('unknown constraint field: '+key);\nif(normalized.companyName.length<2)errors.push('companyName must contain at least 2 characters');\nif(normalized.companyName.length>120)errors.push('companyName must contain at most 120 characters');\nif(normalized.contactName.length>120)errors.push('contactName must contain at most 120 characters');\nif(normalized.contactEmail.length>254)errors.push('contactEmail must contain at most 254 characters');\nif(normalized.processDescription.length<40)errors.push('processDescription must contain at least 40 characters');\nif(normalized.processDescription.length>5000)errors.push('processDescription must contain at most 5000 characters');\nif(!normalized.goals.length)errors.push('at least one goal is required');\nif(normalized.goals.length>10)errors.push('goals must contain at most 10 items');\nif(normalized.goals.some(goal=>goal.length<3||goal.length>240))errors.push('each goal must contain 3 to 240 characters');\nif(normalized.currentTools.length>30)errors.push('currentTools must contain at most 30 items');\nif(normalized.currentTools.some(tool=>tool.length>80))errors.push('each currentTools item must contain at most 80 characters');\nif(normalized.contactEmail&&!emailPattern.test(normalized.contactEmail))errors.push('contactEmail is invalid');\nif(normalized.idempotencyKey.length<8)errors.push('idempotencyKey must contain at least 8 characters');\nif(normalized.idempotencyKey.length>120)errors.push('idempotencyKey must contain at most 120 characters');\nconst sensitivity=c.dataSensitivity??'unknown';\nif(!sensitivities.has(sensitivity))errors.push('constraints.dataSensitivity is invalid');\nif(c.requiresHumanApproval!==undefined&&typeof c.requiresHumanApproval!=='boolean')errors.push('constraints.requiresHumanApproval must be a boolean');\nconst requiresHumanApproval=c.requiresHumanApproval!==false;\nif(['personal','special-category'].includes(sensitivity)&&!requiresHumanApproval)errors.push('sensitive data contradicts requiresHumanApproval=false');\nif(c.budgetEur!==undefined&&(typeof c.budgetEur!=='number'||!Number.isFinite(c.budgetEur)||c.budgetEur<0||c.budgetEur>1000000))errors.push('constraints.budgetEur must be between 0 and 1000000');\nconst deadline=c.deadline;\nconst currentDate=typeof $vars!=='undefined'&&$vars.TEST_CURRENT_DATE?$vars.TEST_CURRENT_DATE:new Date().toISOString().slice(0,10);\nif(deadline!==undefined){if(typeof deadline!=='string'||!isDate(deadline))errors.push('constraints.deadline must be a valid ISO date');else if(deadline<currentDate)errors.push('constraints.deadline must not be in the past');}\nif(sensitivity==='unknown')warnings.push('data sensitivity requires clarification');\nif(!normalized.currentTools.length)warnings.push('current tools require clarification');\nnormalized.constraints={...c,dataSensitivity:sensitivity,requiresHumanApproval};\nreturn [{json:{requestId:'req-'+$execution.id,schemaVersion:'1.0',valid:errors.length===0,status:errors.length===0?'accepted':'rejected',normalized,rawPayload:body,warnings,errors}}];"
+      },
+      "id": "817464bd-34ae-4da5-83a5-9a51a7edee02",
+      "name": "Validate and normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "175d469f-960f-4975-8305-58c2756aee03",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "66ffb0e0-fd39-43e1-9609-b16e01ecee04",
+      "name": "Request valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, requestId: $json.requestId, workflowRequestId: $json.workflowRequestId, schemaVersion: $json.schemaVersion, status: $json.status, idempotentReplay: !$json.created, auditEventsWritten: $json.auditEventsWritten, data: $json.data, warnings: $json.warnings, errors: [] } }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "e36d07bd-0fca-48de-8965-30d1318aee05",
+      "name": "Accept request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        460,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, requestId: $json.requestId, schemaVersion: $json.schemaVersion, status: $json.status, data: null, warnings: $json.warnings, errors: $json.errors } }}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "id": "6f74e421-c29b-48e3-b337-e1c3505aee06",
+      "name": "Reject request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        460,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH payload AS (\n  SELECT $1::jsonb AS envelope\n),\ninput AS (\n  SELECT\n    envelope->'normalized' AS normalized,\n    COALESCE(envelope->'rawPayload', envelope->'normalized') AS raw_payload,\n    COALESCE(envelope->'warnings', '[]'::jsonb) AS warnings,\n    envelope->>'workflowRequestId' AS workflow_request_id,\n    COALESCE(envelope->>'schemaVersion', '1.0') AS schema_version\n  FROM payload\n),\ninserted AS (\n  INSERT INTO project_requests (\n    source,\n    company_name,\n    contact_name,\n    contact_email,\n    process_description,\n    current_tools,\n    goals,\n    constraints,\n    status,\n    raw_payload,\n    idempotency_key\n  )\n  SELECT\n    'n8n-intake',\n    normalized->>'companyName',\n    NULLIF(normalized->>'contactName', ''),\n    NULLIF(normalized->>'contactEmail', ''),\n    normalized->>'processDescription',\n    COALESCE(normalized->'currentTools', '[]'::jsonb),\n    COALESCE(normalized->'goals', '[]'::jsonb),\n    COALESCE(normalized->'constraints', '{}'::jsonb),\n    'accepted',\n    raw_payload,\n    normalized->>'idempotencyKey'\n  FROM input\n  ON CONFLICT (idempotency_key) DO NOTHING\n  RETURNING id, TRUE AS created\n),\nresolved AS (\n  SELECT id, created\n  FROM inserted\n\n  UNION ALL\n\n  SELECT project_requests.id, FALSE AS created\n  FROM project_requests\n  CROSS JOIN input\n  WHERE project_requests.idempotency_key = input.normalized->>'idempotencyKey'\n    AND NOT EXISTS (SELECT 1 FROM inserted)\n  LIMIT 1\n),\naudited AS (\n  INSERT INTO audit_events (request_id, event_type, actor, details)\n  SELECT\n    resolved.id,\n    CASE WHEN resolved.created THEN 'intake.accepted' ELSE 'intake.duplicate' END,\n    'intake-workflow',\n    jsonb_build_object(\n      'workflowRequestId', input.workflow_request_id,\n      'schemaVersion', input.schema_version,\n      'idempotencyKey', input.normalized->>'idempotencyKey',\n      'created', resolved.created,\n      'warnings', input.warnings\n    )\n  FROM resolved\n  CROSS JOIN input\n  RETURNING id\n)\nSELECT\n  resolved.id::text AS \"requestId\",\n  input.workflow_request_id AS \"workflowRequestId\",\n  input.schema_version AS \"schemaVersion\",\n  CASE WHEN resolved.created THEN 'accepted' ELSE 'duplicate' END AS status,\n  resolved.created,\n  input.normalized AS data,\n  input.warnings,\n  '[]'::jsonb AS errors,\n  (SELECT COUNT(*) FROM audited)::integer AS \"auditEventsWritten\"\nFROM resolved\nCROSS JOIN input;\n",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify({ normalized: $json.normalized, rawPayload: $json.rawPayload, warnings: $json.warnings, workflowRequestId: $json.requestId, schemaVersion: $json.schemaVersion }) }}"
+        }
+      },
+      "id": "ed381335-42f4-49a8-a940-57af86eaee08",
+      "name": "Persist accepted intake",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        180,
+        -100
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH payload AS (\n  SELECT $1::jsonb AS envelope\n),\naudited AS (\n  INSERT INTO audit_events (request_id, event_type, actor, details)\n  SELECT\n    NULL,\n    'intake.rejected',\n    'intake-workflow',\n    jsonb_build_object(\n      'workflowRequestId', envelope->>'workflowRequestId',\n      'schemaVersion', COALESCE(envelope->>'schemaVersion', '1.0'),\n      'idempotencyKey', envelope->'normalized'->>'idempotencyKey',\n      'companyName', envelope->'normalized'->>'companyName',\n      'warnings', COALESCE(envelope->'warnings', '[]'::jsonb),\n      'errors', COALESCE(envelope->'errors', '[]'::jsonb)\n    )\n  FROM payload\n  RETURNING id\n)\nSELECT\n  envelope->>'workflowRequestId' AS \"requestId\",\n  COALESCE(envelope->>'schemaVersion', '1.0') AS \"schemaVersion\",\n  'rejected' AS status,\n  FALSE AS valid,\n  NULL::jsonb AS data,\n  COALESCE(envelope->'warnings', '[]'::jsonb) AS warnings,\n  COALESCE(envelope->'errors', '[]'::jsonb) AS errors,\n  (SELECT COUNT(*) FROM audited)::integer AS \"auditEventsWritten\"\nFROM payload;\n",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify({ normalized: $json.normalized, warnings: $json.warnings, errors: $json.errors, workflowRequestId: $json.requestId, schemaVersion: $json.schemaVersion }) }}"
+        }
+      },
+      "id": "0d9723df-209b-4eb3-baa7-4f6fbeeaee09",
+      "name": "Audit rejected intake",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        180,
+        100
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    }
+  ],
+  "connections": {
+    "Receive project request": {
+      "main": [
+        [
+          {
+            "node": "Validate and normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and normalize": {
+      "main": [
+        [
+          {
+            "node": "Request valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request valid?": {
+      "main": [
+        [
+          {
+            "node": "Persist accepted intake",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Audit rejected intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persist accepted intake": {
+      "main": [
+        [
+          {
+            "node": "Accept request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit rejected intake": {
+      "main": [
+        [
+          {
+            "node": "Reject request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "versionId": "6f0042ef-41fa-49cf-b767-19c46f3aee07",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

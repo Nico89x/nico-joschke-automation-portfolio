@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://portfolio.local/schemas/automation-blueprint.schema.json",
+  "title": "Automation Blueprint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requestId", "schemaVersion", "status", "data", "warnings", "errors"],
+  "properties": {
+    "requestId": { "type": "string", "minLength": 5, "maxLength": 160 },
+    "schemaVersion": { "const": "1.0" },
+    "status": { "enum": ["completed", "needs-human-input", "rejected"] },
+    "data": { "type": ["object", "null"] },
+    "warnings": { "type": "array", "items": { "type": "string" } },
+    "errors": { "type": "array", "items": { "type": "string" } }
+  }
+}

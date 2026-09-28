@@ -1,0 +1,86 @@
+{
+  "name": "03 - Read-only RAG Retrieval API",
+  "nodes": [
+    {
+      "parameters": {"httpMethod": "POST", "path": "knowledge-base-search", "responseMode": "responseNode", "options": {}},
+      "id": "1b52fc1d-3a4e-4ef5-8618-9903f1c6a901",
+      "name": "Receive knowledge question",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-620, 0],
+      "webhookId": "d66d4564-83d3-47c8-a0ba-313456a0d01f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const D=1536,stop=new Set(['a','an','and','are','as','at','be','bei','by','das','dem','den','der','die','ein','eine','for','from','für','im','in','ist','it','mit','of','on','or','the','to','und','von','with','zu']);\nconst norm=v=>String(v??'').replace(/\\s+/g,' ').trim(),tokens=v=>norm(v).toLocaleLowerCase('de-DE').match(/[\\p{L}\\p{N}][\\p{L}\\p{N}_-]*/gu)?.filter(t=>t.length>1&&!stop.has(t))??[];\nconst hash=v=>{let h=0x811c9dc5;for(let i=0;i<v.length;i++){h^=v.charCodeAt(i);h=Math.imul(h,0x01000193)}return h>>>0};\nconst vector=v=>{const a=new Array(D).fill(0);for(const t of tokens(v)){const h=hash(t),s=hash('sign:'+t);a[h%D]+=s%2? -1:1}const l=Math.hypot(...a);return l?a.map(n=>n/l):a};\nconst literal=a=>'['+a.map(n=>Number(n).toFixed(8)).join(',')+']';\nconst input=$json.body&&typeof $json.body==='object'&&!Array.isArray($json.body)?$json.body:$json,queryText=norm(input.queryText),rawLimit=Number(input.limit??3),errors=[];\nif(queryText.length<8)errors.push('queryText must contain at least 8 characters');if(queryText.length>1200)errors.push('queryText must not exceed 1200 characters');if(!Number.isInteger(rawLimit)||rawLimit<1||rawLimit>10)errors.push('limit must be an integer from 1 to 10');\nif(errors.length)return[{json:{requestId:'retrieval-'+$execution.id,valid:false,status:'rejected',errors,queryText}}];\nreturn[{json:{requestId:'retrieval-'+$execution.id,valid:true,status:'accepted',queryText,limit:rawLimit,queryEmbedding:literal(vector(queryText)),embeddingModel:'local-hash-v1-baseline',errors:[]}}];"
+      },
+      "id": "2056f1cc-47e5-4cbd-8d63-71c78b63ae02",
+      "name": "Validate and embed question",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-370, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}, "conditions": [{"id": "3e83bc2c-7943-4144-9c6c-5ee95d8b7503", "leftValue": "={{ $json.valid }}", "rightValue": true, "operator": {"type": "boolean", "operation": "true", "singleValue": true}}], "combinator": "and"},
+        "options": {}
+      },
+      "id": "3e83bc2c-7943-4144-9c6c-5ee95d8b7503",
+      "name": "Question valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-110, 0]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH payload AS (\n  SELECT $1::jsonb AS envelope\n),\ninput AS (\n  SELECT\n    NULLIF(envelope->>'queryEmbedding', '')::vector AS query_embedding,\n    COALESCE(envelope->>'queryText', '') AS query_text,\n    LEAST(GREATEST(COALESCE((envelope->>'limit')::INTEGER, 3), 1), 10) AS result_limit\n  FROM payload\n),\nscored AS (\n  SELECT\n    chunk.id,\n    chunk.source_id,\n    chunk.source_name,\n    chunk.source_url,\n    chunk.chunk_index,\n    chunk.content,\n    chunk.metadata,\n    1 - (chunk.embedding <=> input.query_embedding) AS semantic_score,\n    ts_rank_cd(chunk.search_vector, plainto_tsquery('simple', input.query_text)) AS lexical_score\n  FROM knowledge_chunks AS chunk\n  CROSS JOIN input\n  WHERE chunk.embedding IS NOT NULL AND input.query_embedding IS NOT NULL\n)\nSELECT\n  id, source_id, source_name, source_url, chunk_index, content, metadata,\n  semantic_score, lexical_score,\n  semantic_score * 0.85 + lexical_score * 0.15 AS retrieval_score\nFROM scored\nORDER BY retrieval_score DESC, source_id, chunk_index\nLIMIT (SELECT result_limit FROM input);\n",
+        "options": {"queryReplacement": "={{ JSON.stringify({ queryText: $('Validate and embed question').first().json.queryText, queryEmbedding: $('Validate and embed question').first().json.queryEmbedding, limit: $('Validate and embed question').first().json.limit }) }}"}
+      },
+      "id": "4d1c67bf-86e2-49bd-a2c7-d3ccf550df04",
+      "name": "Run read-only retrieval",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [150, -100],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const request=$('Validate and embed question').first().json;const sources=$input.all().map(({json})=>({sourceId:json.source_id,sourceName:json.source_name,sourceUrl:json.source_url,chunkIndex:json.chunk_index,content:json.content,metadata:json.metadata,semanticScore:Number(json.semantic_score),lexicalScore:Number(json.lexical_score),retrievalScore:Number(json.retrieval_score)}));return[{json:{ok:true,status:'retrieved',requestId:request.requestId,queryText:request.queryText,embeddingModel:request.embeddingModel,sourceCount:sources.length,sources}}];"
+      },
+      "id": "5106ee04-d8d7-4fcf-8199-e9a01bc89d05",
+      "name": "Prepare source-grounded response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [410, -100]
+    },
+    {
+      "parameters": {"respondWith": "json", "responseBody": "={{ $json }}", "options": {"responseCode": 200}},
+      "id": "6ce9d798-3d4b-438e-b6e3-e20d61eb4d06",
+      "name": "Return source-grounded results",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [670, -100]
+    },
+    {
+      "parameters": {"respondWith": "json", "responseBody": "={{ { ok: false, status: $json.status, queryText: $json.queryText, errors: $json.errors } }}", "options": {"responseCode": 422}},
+      "id": "7f4a5e15-99a8-4307-9bfd-dc4b26c46107",
+      "name": "Reject invalid question",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [150, 110]
+    }
+  ],
+  "connections": {
+    "Receive knowledge question": {"main": [[{"node": "Validate and embed question", "type": "main", "index": 0}]]},
+    "Validate and embed question": {"main": [[{"node": "Question valid?", "type": "main", "index": 0}]]},
+    "Question valid?": {"main": [[{"node": "Run read-only retrieval", "type": "main", "index": 0}], [{"node": "Reject invalid question", "type": "main", "index": 0}]]},
+    "Run read-only retrieval": {"main": [[{"node": "Prepare source-grounded response", "type": "main", "index": 0}]]},
+    "Prepare source-grounded response": {"main": [[{"node": "Return source-grounded results", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "00000000-0000-4000-8000-000000000003"
+}

@@ -1,0 +1,68 @@
+{
+  "name": "06 - Sanitised Audit Event API",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "audit-event", "responseMode": "responseNode", "options": {} },
+      "id": "1c4f319e-70a9-43ea-bc74-09de44b62361",
+      "name": "Receive sanitised audit event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-380, 0],
+      "webhookId": "1c4f319e-70a9-43ea-bc74-09de44b62361"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input=$json.body&&typeof $json.body==='object'&&!Array.isArray($json.body)?$json.body:$json;const clean=v=>typeof v==='string'?v.trim():'';const details=input.details&&typeof input.details==='object'&&!Array.isArray(input.details)?input.details:{};const errors=[];if(clean(input.eventType).length<3)errors.push('eventType is required');if(clean(input.actor).length<2)errors.push('actor is required');if(Object.prototype.hasOwnProperty.call(details,'contactEmail')||Object.prototype.hasOwnProperty.call(details,'contactName'))errors.push('audit details must not include contact data');const dbId=clean(input.requestDbId);if(dbId&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(dbId))errors.push('requestDbId must be a UUID when provided');if(errors.length)return[{json:{valid:false,status:'rejected',errors}}];return[{json:{valid:true,status:'accepted',requestDbId:dbId||null,eventType:clean(input.eventType),actor:clean(input.actor),details:{stage:clean(details.stage)||'unknown',status:clean(details.status)||'unknown',promptVersion:clean(details.promptVersion)||'local-deterministic-v1',durationMs:Number(details.durationMs)||0,inputTokens:Number(details.inputTokens)||0,outputTokens:Number(details.outputTokens)||0,estimatedCostUsd:Number(details.estimatedCostUsd)||0,approvalStatus:clean(details.approvalStatus)||null,errorCount:Number(details.errorCount)||0}}}];"
+      },
+      "id": "7b7982e3-0100-42d8-a157-2837f8f559fb",
+      "name": "Validate and minimise audit event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-120, 0]
+    },
+    {
+      "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "c84d8116-ab5a-4c4f-85eb-80f5e66d20ba", "leftValue": "={{ $json.valid }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true", "singleValue": true } }], "combinator": "and" }, "options": {} },
+      "id": "c84d8116-ab5a-4c4f-85eb-80f5e66d20ba",
+      "name": "Audit event valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [120, 0]
+    },
+    {
+      "parameters": { "operation": "executeQuery", "query": "INSERT INTO audit_events (request_id, event_type, actor, details) VALUES (NULLIF($1::jsonb->>'requestDbId', '')::uuid, $1::jsonb->>'eventType', $1::jsonb->>'actor', COALESCE($1::jsonb->'details', '{}'::jsonb)) RETURNING id, created_at, event_type, actor;", "options": { "queryReplacement": "={{ JSON.stringify($json) }}" } },
+      "id": "9f5751d6-7b0f-4d4b-878a-1ca44a4319d1",
+      "name": "Persist audit event",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [370, -100],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { ok: true, status: 'persisted', auditEvent: $json } }}", "options": { "responseCode": 201 } },
+      "id": "d4ae96e5-b8ce-40a8-9185-7dbf00728a7f",
+      "name": "Confirm audit persistence",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [620, -100]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { ok: false, status: $json.status, errors: $json.errors } }}", "options": { "responseCode": 422 } },
+      "id": "437a2608-f0d5-4aa3-988c-3e3e31e45054",
+      "name": "Reject unsafe audit event",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [370, 110]
+    }
+  ],
+  "connections": {
+    "Receive sanitised audit event": { "main": [[{ "node": "Validate and minimise audit event", "type": "main", "index": 0 }]] },
+    "Validate and minimise audit event": { "main": [[{ "node": "Audit event valid?", "type": "main", "index": 0 }]] },
+    "Audit event valid?": { "main": [[{ "node": "Persist audit event", "type": "main", "index": 0 }], [{ "node": "Reject unsafe audit event", "type": "main", "index": 0 }]] },
+    "Persist audit event": { "main": [[{ "node": "Confirm audit persistence", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "00000000-0000-4000-8000-000000000006"
+}

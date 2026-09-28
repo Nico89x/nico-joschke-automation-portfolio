@@ -1,0 +1,181 @@
+{
+  "name": "02 - Knowledge Base Ingestion API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "knowledge-base-ingest",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "36da004c-646e-4de1-bd9c-1318f2172c00",
+      "name": "Receive synthetic knowledge document",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        0
+      ],
+      "webhookId": "825f5e0f-7f53-4b20-bd5b-f343d8b17600"
+    },
+    {
+      "parameters": {
+        "jsCode": "const D=1536,stop=new Set(['a','an','and','are','as','at','be','bei','by','das','dem','den','der','die','ein','eine','for','from','für','im','in','ist','it','mit','of','on','or','the','to','und','von','with','zu']);\nconst norm=v=>String(v??'').replace(/\\s+/g,' ').trim(),tokens=v=>norm(v).toLocaleLowerCase('de-DE').match(/[\\p{L}\\p{N}][\\p{L}\\p{N}_-]*/gu)?.filter(t=>t.length>1&&!stop.has(t))??[];\nconst hash=v=>{let h=0x811c9dc5;for(let i=0;i<v.length;i++){h^=v.charCodeAt(i);h=Math.imul(h,0x01000193)}return h>>>0};\nconst vector=v=>{const a=new Array(D).fill(0);for(const t of tokens(v)){const h=hash(t),s=hash('sign:'+t);a[h%D]+=s%2? -1:1}const l=Math.hypot(...a);return l?a.map(n=>n/l):a};\nconst literal=a=>'['+a.map(n=>Number(n).toFixed(8)).join(',')+']';\nconst input=$json.body&&typeof $json.body==='object'&&!Array.isArray($json.body)?$json.body:$json,sourceId=norm(input.sourceId),sourceName=norm(input.sourceName),sourceUrl=norm(input.sourceUrl)||null,content=String(input.content??'').trim(),tags=Array.isArray(input.tags)?[...new Set(input.tags.map(norm).filter(Boolean))].slice(0,12):[],errors=[];\nif(!/^[a-z0-9][a-z0-9-]{2,80}$/i.test(sourceId))errors.push('sourceId must use 3-81 letters, numbers, or hyphens');if(sourceName.length<3)errors.push('sourceName must contain at least 3 characters');if(norm(content).length<120)errors.push('content must contain at least 120 characters');if(sourceUrl&&!/^https?:\\/\\//i.test(sourceUrl))errors.push('sourceUrl must be an http(s) URL when provided');\nif(errors.length)return[{json:{requestId:'knowledge-'+$execution.id,valid:false,status:'rejected',errors,sourceId,sourceName}}];\nconst paragraphs=content.split(/\\n\\s*\\n/).map(norm).filter(Boolean),chunks=[];let current=[],size=0;const flush=()=>{if(!current.length)return;const value=current.join('\\n\\n'),v=vector(value);chunks.push({chunkIndex:chunks.length,content:value,contentHash:hash(sourceId+':'+chunks.length+':'+value).toString(16).padStart(8,'0'),tokenCount:tokens(value).length,embedding:literal(v)});current=[];size=0};for(const p of paragraphs){const count=tokens(p).length;if(size&&size+count>150)flush();current.push(p);size+=count}flush();\nreturn[{json:{requestId:'knowledge-'+$execution.id,valid:true,status:'accepted',sourceId,sourceName,sourceUrl,tags,embeddingModel:'local-hash-v1-baseline',chunks,errors:[]}}];"
+      },
+      "id": "a53a2062-355b-4413-8c44-a0d1464e2a01",
+      "name": "Validate and chunk knowledge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b8f1a2a4-6fd1-4ba7-ae6c-6a66b1ad4b02",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b8f1a2a4-6fd1-4ba7-ae6c-6a66b1ad4b02",
+      "name": "Document valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH payload AS (\n  SELECT $1::jsonb AS envelope\n),\nchunks AS (\n  SELECT\n    payload.envelope->>'sourceId' AS source_id,\n    payload.envelope->>'sourceName' AS source_name,\n    NULLIF(payload.envelope->>'sourceUrl', '') AS source_url,\n    COALESCE(payload.envelope->'tags', '[]'::jsonb) AS tags,\n    payload.envelope->>'embeddingModel' AS embedding_model,\n    item.\"chunkIndex\" AS chunk_index,\n    item.content,\n    item.\"contentHash\" AS content_hash,\n    item.\"tokenCount\" AS token_count,\n    item.embedding::vector AS embedding\n  FROM payload\n  CROSS JOIN LATERAL jsonb_to_recordset(payload.envelope->'chunks') AS item(\n    \"chunkIndex\" INTEGER,\n    content TEXT,\n    \"contentHash\" TEXT,\n    \"tokenCount\" INTEGER,\n    embedding TEXT\n  )\n),\ndeleted AS (\n  DELETE FROM knowledge_chunks existing\n  USING payload\n  WHERE existing.source_id = payload.envelope->>'sourceId'\n    AND NOT EXISTS (\n      SELECT 1 FROM chunks incoming WHERE incoming.chunk_index = existing.chunk_index\n    )\n  RETURNING existing.id\n),\nupserted AS (\n  INSERT INTO knowledge_chunks (\n    source_id, source_name, source_url, content, metadata, embedding,\n    embedding_model, chunk_index, content_hash, token_count, updated_at\n  )\n  SELECT\n    source_id, source_name, source_url, content,\n    jsonb_build_object('tags', tags, 'synthetic', true), embedding,\n    embedding_model, chunk_index, content_hash, token_count, NOW()\n  FROM chunks\n  ON CONFLICT (source_id, chunk_index) WHERE source_id IS NOT NULL AND chunk_index IS NOT NULL\n  DO UPDATE SET\n    source_name = EXCLUDED.source_name,\n    source_url = EXCLUDED.source_url,\n    content = EXCLUDED.content,\n    metadata = EXCLUDED.metadata,\n    embedding = EXCLUDED.embedding,\n    embedding_model = EXCLUDED.embedding_model,\n    content_hash = EXCLUDED.content_hash,\n    token_count = EXCLUDED.token_count,\n    updated_at = NOW()\n  RETURNING id\n)\nSELECT\n  (SELECT COUNT(*)::INTEGER FROM upserted) AS upserted_chunks,\n  (SELECT COUNT(*)::INTEGER FROM deleted) AS deleted_stale_chunks;\n",
+        "options": {
+          "queryReplacement": "={{ JSON.stringify({ sourceId: $('Validate and chunk knowledge').first().json.sourceId, sourceName: $('Validate and chunk knowledge').first().json.sourceName, sourceUrl: $('Validate and chunk knowledge').first().json.sourceUrl, tags: $('Validate and chunk knowledge').first().json.tags, embeddingModel: $('Validate and chunk knowledge').first().json.embeddingModel, chunks: $('Validate and chunk knowledge').first().json.chunks }) }}"
+        }
+      },
+      "id": "f24a5634-6d9a-4b50-8bc2-3c6974cd5b03",
+      "name": "Upsert knowledge chunks",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        160,
+        -100
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, status: 'accepted', sourceId: $('Validate and chunk knowledge').first().json.sourceId, embeddingModel: $('Validate and chunk knowledge').first().json.embeddingModel, upsertedChunks: $json.upserted_chunks, deletedStaleChunks: $json.deleted_stale_chunks } }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "2f9f5b34-a2b5-4f46-a4bd-3994c09bc404",
+      "name": "Confirm knowledge ingestion",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        430,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, status: $json.status, sourceId: $json.sourceId, errors: $json.errors } }}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "id": "9e08bced-88cd-4ad2-a2e8-5df1f23c6d05",
+      "name": "Reject invalid knowledge document",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        160,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Receive synthetic knowledge document": {
+      "main": [
+        [
+          {
+            "node": "Validate and chunk knowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and chunk knowledge": {
+      "main": [
+        [
+          {
+            "node": "Document valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document valid?": {
+      "main": [
+        [
+          {
+            "node": "Upsert knowledge chunks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject invalid knowledge document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert knowledge chunks": {
+      "main": [
+        [
+          {
+            "node": "Confirm knowledge ingestion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "00000000-0000-4000-8000-000000000002"
+}

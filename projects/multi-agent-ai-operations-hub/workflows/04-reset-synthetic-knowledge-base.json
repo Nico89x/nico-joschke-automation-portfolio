@@ -1,0 +1,31 @@
+{
+  "name": "04 - Reset Synthetic Knowledge Base",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "920d0b72-08da-4ac6-9d4f-7aa21c314001",
+      "name": "Start local synthetic reset",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-220, 0]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH deleted AS (\n  DELETE FROM knowledge_chunks\n  WHERE metadata->>'synthetic' = 'true'\n  RETURNING id\n)\nSELECT COUNT(*)::INTEGER AS deleted_synthetic_chunks FROM deleted;\n",
+        "options": {}
+      },
+      "id": "bd530d4a-f6c7-4ae0-8fc7-6623bd9c4002",
+      "name": "Delete only synthetic knowledge chunks",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [40, 0]
+    }
+  ],
+  "connections": {
+    "Start local synthetic reset": {"main": [[{"node": "Delete only synthetic knowledge chunks", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "00000000-0000-4000-8000-000000000004"
+}

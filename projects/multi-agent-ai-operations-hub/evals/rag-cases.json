@@ -1,0 +1,7 @@
+[
+  { "id": "duplicate-webhook", "query": "How do we prevent duplicate webhook deliveries from creating two CRM records?", "expectedSourceId": "webhook-idempotency" },
+  { "id": "human-approval", "query": "When may the workflow create a CRM contact and what must the reviewer see?", "expectedSourceId": "crm-human-approval" },
+  { "id": "retry-policy", "query": "Which API errors can be retried and what should be logged for recovery?", "expectedSourceId": "reliability-error-handling" },
+  { "id": "rag-sources", "query": "How does RAG preserve sources and prevent the agent from changing the knowledge base?", "expectedSourceId": "rag-governance" },
+  { "id": "solution-blueprint", "query": "What information belongs in an automation discovery and implementation blueprint?", "expectedSourceId": "solution-discovery" }
+]

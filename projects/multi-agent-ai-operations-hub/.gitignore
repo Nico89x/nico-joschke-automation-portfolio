@@ -1,0 +1,9 @@
+.env
+node_modules/
+coverage/
+*.log
+.n8n/
+postgres-data/
+.local-ai-usage.json
+.local-ai-usage.json.tmp
+.local-ai-usage.lock

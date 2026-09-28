@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://portfolio.local/schemas/agent-envelope.schema.json",
+  "title": "Agent Handoff Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["requestId", "schemaVersion", "status", "data", "warnings", "errors"],
+  "properties": {
+    "requestId": { "type": "string", "minLength": 5, "maxLength": 160 },
+    "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "status": {
+      "type": "string",
+      "enum": ["accepted", "rejected", "needs-human-input", "completed", "failed"]
+    },
+    "data": { "type": ["object", "null"] },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 100
+    },
+    "errors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 100
+    }
+  }
+}

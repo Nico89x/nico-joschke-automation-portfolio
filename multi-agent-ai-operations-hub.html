@@ -23,7 +23,7 @@
       </section>
 
       <section class="proof detail-proof">
-        <article><strong>168</strong><span>lokale Tests bestanden</span></article>
+        <article><strong>178</strong><span>lokale Tests bestanden</span></article>
         <article><strong>14/15</strong><span>belegte AI-Entwürfe akzeptiert</span></article>
         <article><strong>85,7 %</strong><span>mittlere markierte Quellenpräzision</span></article>
         <article><strong>0</strong><span>externe Schreibaktionen</span></article>
@@ -54,6 +54,7 @@
           <article><h3>Risk + Estimate</h3><p>Markiert Datenschutz-, Dubletten- und Berechtigungsrisiken und erzeugt eine regelbasierte Aufwandsspanne.</p></article>
           <article><h3>Local AI Advisory</h3><p>Qwen über Ollama interpretiert Freitext. Das Ergebnis muss ein enges Schema und mindestens eine zulässige Quellen-ID erfüllen.</p></article>
           <article><h3>Human Review</h3><p>Eine einmalige namentliche Freigabe oder Ablehnung wird auditiert. Das Ausführungstor bleibt standardmäßig geschlossen.</p></article>
+          <article><h3>Fail-closed Controls</h3><p>Request-ID und Blueprint-Version werden an die Freigabe gebunden. Offene Fragen, falsche Typen oder unvollständige Quellen stoppen den Ablauf.</p></article>
         </div>
       </section>
 
@@ -61,10 +62,10 @@
         <div class="section-heading"><div><p class="eyebrow">Tests und Evaluation</p><h2>Ergebnisse mit sichtbaren Grenzen.</h2></div><p>Alle Angaben stammen aus lokalen synthetischen Testläufen. Es werden keine Produktivdaten oder realen Kundensysteme verwendet.</p></div>
         <div class="test-table" role="region" aria-label="Testergebnisse" tabindex="0">
           <table><thead><tr><th>Prüfung</th><th>Ergebnis</th><th>Einordnung</th></tr></thead><tbody>
-            <tr><td>Automatisierte Tests</td><td>168 bestanden</td><td>Validierung, Routing, Agenten-Baselines, Freigaben und Fehlerpfade</td></tr>
+            <tr><td>Automatisierte Tests</td><td>178 bestanden</td><td>Validierung, Routing, Agenten-Baselines, Freigabe-Binding, RAG und Fehlerpfade</td></tr>
             <tr><td>Lokale Ollama/n8n-Läufe</td><td>3 erfolgreich</td><td>Synthetische Anfragen; keine externen Aktionen</td></tr>
             <tr><td>Vorab markierter AI-Satz</td><td>14/15 akzeptiert</td><td>Ein Fall stoppte trotz vorhandener passender Quelle: False Negative</td></tr>
-            <tr><td>Trigger unter akzeptierten Fällen</td><td>14/14 passend</td><td>Kleiner synthetischer Einmallauf, nicht generalisierbar</td></tr>
+            <tr><td>Trigger unter akzeptierten Fällen</td><td>Erstlauf 14/14 · Wiederholung 13/14</td><td>Bewusst offengelegte Modellvarianz; kleine synthetische Stichprobe</td></tr>
             <tr><td>Markierte Quellenpräzision</td><td>85,7 % im Mittel</td><td>Keine semantische Entailment-Prüfung; menschliche Kontrolle bleibt nötig</td></tr>
           </tbody></table>
         </div>
@@ -73,9 +74,9 @@
 
       <section class="section case-study-section">
         <p class="eyebrow">Prüfbare Exporte</p>
-        <h2>Zwei zentrale n8n-Workflows.</h2>
-        <p class="lede">Die Exporte enthalten keine Zugangsdaten und sind deaktiviert. PostgreSQL-Credentials müssen nach einem Import lokal neu ausgewählt werden.</p>
-        <div class="file-links"><a href="operations-hub-central-workflow.json" download>Zentralen Operations-Hub-Workflow herunterladen</a><a href="operations-hub-local-ai-receipt.json" download>Lokalen AI-Prüfworkflow herunterladen</a><a href="index.html#projekte">Zurück zur Übersicht</a></div>
+        <h2>Exporte und vollständige, reproduzierbare Projektstruktur.</h2>
+        <p class="lede">Die Exporte enthalten keine Zugangsdaten und sind deaktiviert. Der vollständige GitHub-Ordner enthält Docker Compose, Datenbankschema, zehn n8n-Workflows, JavaScript-Module, synthetische Testdaten, 178 Tests und technische Dokumentation.</p>
+        <div class="file-links"><a href="operations-hub-central-workflow.json" download>Zentralen Operations-Hub-Workflow herunterladen</a><a href="operations-hub-local-ai-receipt.json" download>Lokalen AI-Prüfworkflow herunterladen</a><a href="https://github.com/Nico89x/nico-joschke-automation-portfolio/tree/main/projects/multi-agent-ai-operations-hub">Vollständigen Quellcode auf GitHub prüfen</a><a href="index.html#projekte">Zurück zur Übersicht</a></div>
       </section>
     </main>
     <footer><span>Nico Joschke · Automation Portfolio</span><span>Portfolio- und Testsystem · Stand September 2026</span></footer>

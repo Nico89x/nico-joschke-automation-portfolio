@@ -24,7 +24,7 @@
         <div class="hero-copy">
           <p class="eyebrow">n8n · Workflow Automation · AI · APIs</p>
           <h1 id="hero-title">Workflow Automation mit sichtbarer Engineering-Logik.</h1>
-          <p class="lede">Ich entwickle nachvollziehbare n8n-Systeme mit Datenvalidierung, API-Anbindungen, RAG, Fehlerpfaden und menschlichen Freigaben. Vier Fallstudien zeigen die technische Umsetzung – transparent als eigenständig entwickelte Portfolio- und Testsysteme eingeordnet.</p>
+          <p class="lede">Ich entwickle nachvollziehbare n8n-Systeme mit Datenvalidierung, API-Anbindungen, RAG, Fehlerpfaden und menschlichen Freigaben. Vier Fallstudien zeigen die technische Umsetzung – inklusive vollständigem Quellcode, Tests und transparent dokumentierter KI-Unterstützung.</p>
           <div class="hero-actions">
             <a class="button primary" href="#projekte">Fallstudien prüfen</a>
             <a class="button secondary" href="Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf">Kurzprofil herunterladen</a>
@@ -48,7 +48,7 @@
       </section>
 
       <section class="proof" aria-label="Technische Nachweise des Hauptprojekts">
-        <article><strong>168</strong><span>lokale Tests bestanden</span></article>
+        <article><strong>178</strong><span>lokale Tests bestanden</span></article>
         <article><strong>15</strong><span>synthetische AI-Eval-Fälle</span></article>
         <article><strong>3</strong><span>lokale Ollama/n8n-Läufe</span></article>
         <article><strong>0</strong><span>externe Schreibaktionen</span></article>
@@ -66,7 +66,7 @@
         <article class="case case-featured case-flagship">
           <div class="case-top">
             <span class="case-index">01</span>
-            <span class="case-score">168 Tests · n8n + PostgreSQL + lokale AI</span>
+            <span class="case-score">178 Tests · vollständiger Quellcode</span>
           </div>
           <div class="case-main">
             <div class="case-tags"><span>n8n</span><span>PostgreSQL</span><span>pgvector</span><span>Ollama</span><span>RAG</span><span>Human-in-the-loop</span></div>
@@ -92,7 +92,7 @@
             <details class="evidence-panel">
               <summary>Testergebnisse und ehrliche Grenze</summary>
               <div class="details-grid">
-                <div><strong>Nachweise</strong><p>168 lokale Tests bestanden. Drei synthetische Ollama/n8n-Läufe wurden dokumentiert. Ein vorab markierter 15-Fall-Satz akzeptierte 14 belegte Entwürfe.</p></div>
+                <div><strong>Nachweise</strong><p>178 lokale Tests bestanden. Drei synthetische Ollama/n8n-Läufe wurden dokumentiert. Ein vorab markierter 15-Fall-Satz akzeptierte in zwei Läufen jeweils 14 belegte Entwürfe.</p></div>
                 <div><strong>Grenze</strong><p>Ein Fall wurde trotz vorhandener passender Quelle gestoppt. Der kleine synthetische Test ist keine Produktionsvalidierung und kein Nachweis autonomer Agentenqualität.</p></div>
               </div>
             </details>
@@ -101,6 +101,7 @@
               <a href="multi-agent-ai-operations-hub.html">Fallstudie öffnen</a>
               <a href="operations-hub-central-workflow.json" download>Zentralen n8n-Workflow prüfen</a>
               <a href="operations-hub-local-ai-receipt.json" download>AI-Prüfworkflow prüfen</a>
+              <a href="https://github.com/Nico89x/nico-joschke-automation-portfolio/tree/main/projects/multi-agent-ai-operations-hub">Vollständigen Quellcode öffnen</a>
             </div>
           </div>
         </article>
@@ -168,7 +169,7 @@
           <article><span class="quality-mark">01</span><h3>Bereinigt</h3><p>Credential-Verweise und Zugangsdaten wurden entfernt. Testadressen verwenden reservierte Beispieldomains.</p></article>
           <article><span class="quality-mark">02</span><h3>Sicher deaktiviert</h3><p>Veröffentlichte Workflow-Exporte sind standardmäßig deaktiviert und lösen nach dem Import keine externen Aktionen aus.</p></article>
           <article><span class="quality-mark">03</span><h3>Geprüft</h3><p>Exporte sind parsebar; Verbindungen verweisen auf vorhandene Knoten. Der Operations Hub wurde zusätzlich mit lokalen automatisierten Tests geprüft.</p></article>
-          <article><span class="quality-mark">04</span><h3>Ehrlich eingeordnet</h3><p>Es handelt sich um eigenständig entwickelte Portfolio- und Testsysteme, nicht um behauptete produktive Kundenprojekte.</p></article>
+          <article><span class="quality-mark">04</span><h3>Ehrlich eingeordnet</h3><p>Konzept, Entscheidungen, Tests und Erklärbarkeit liegen bei mir; KI-gestützte Implementierung wird transparent benannt. Es sind keine behaupteten Kundenprojekte.</p></article>
         </div>
         <div class="engineering-next"><div><p class="eyebrow">Nächste Engineering-Schritte</p><h3>So würde ich die Systeme für Produktion weiterentwickeln.</h3></div><ul><li><strong>Resilienz:</strong> Retry, Backoff, Dead-Letter-Pfad und kontrolliertes Replay</li><li><strong>Sicherheit:</strong> URL-Allowlisting, SSRF-Schutz und Prompt-Injection-Grenzen</li><li><strong>Wartbarkeit:</strong> gemeinsame Logik in Subworkflows und zentrale Konfiguration</li><li><strong>Validierung:</strong> größere Eval-Sätze, semantische Quellenprüfung und reproduzierbare CI-Läufe</li></ul></div>
       </section>

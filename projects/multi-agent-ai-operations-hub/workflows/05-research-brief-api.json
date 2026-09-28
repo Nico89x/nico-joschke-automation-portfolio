@@ -1,0 +1,39 @@
+{
+  "name": "05 - Bounded Research Brief API",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "research-brief", "responseMode": "responseNode", "options": {} },
+      "id": "ec9554a0-31da-4500-9c12-bbd13a114d31",
+      "name": "Receive accepted intake envelope",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-320, 0],
+      "webhookId": "ec9554a0-31da-4500-9c12-bbd13a114d31"
+    },
+    {
+      "parameters": {
+        "jsCode": "const catalog={hubspot:['CRM records','contacts','webhooks'],notion:['databases','API integration'],slack:['notifications','API integration'],n8n:['workflow automation','webhooks','API integration'],zapier:['workflow automation','webhooks'],make:['workflow automation','webhooks'],'make.com':['workflow automation','webhooks'],salesforce:['CRM records','API integration'],'google sheets':['tabular data','API integration'],gmail:['email drafts','API integration']};\nconst clean=v=>typeof v==='string'?v.trim().replace(/\\s+/g,' '):'';const uniq=a=>[...new Set(a.filter(Boolean))];\nconst input=$json.body&&typeof $json.body==='object'&&!Array.isArray($json.body)?$json.body:$json;const data=input.data&&typeof input.data==='object'&&!Array.isArray(input.data)?input.data:{};const errors=[],warnings=[];\nif(!/^.{5,160}$/.test(clean(input.requestId)))errors.push('requestId must contain 5 to 160 characters');if(input.schemaVersion!=='1.0')errors.push('schemaVersion must be 1.0');if(input.status!=='accepted')errors.push('research requires an accepted intake envelope');if(clean(data.companyName).length<2)errors.push('data.companyName is required');if(clean(data.processDescription).length<40)errors.push('data.processDescription must contain at least 40 characters');if(!Array.isArray(data.goals)||!data.goals.map(clean).filter(Boolean).length)errors.push('data.goals must contain at least one goal');\nif(errors.length)return[{json:{requestId:clean(input.requestId)||'invalid-request',schemaVersion:'1.0',status:'rejected',data:null,warnings,errors}}];\nconst tools=Array.isArray(data.currentTools)?uniq(data.currentTools.map(clean)):[];const found=tools.map(tool=>({tool,capabilities:catalog[tool.toLowerCase()]||null})).filter(x=>x.capabilities);const unknown=tools.filter(tool=>!catalog[tool.toLowerCase()]);const sensitivity=clean(data.constraints?.dataSensitivity)||'unknown';const unknowns=[];if(!tools.length)unknowns.push('Current tools are not specified; no integration assumptions may be made.');if(unknown.length)unknowns.push('The local catalog does not cover: '+unknown.join(', ')+'.');if(sensitivity==='unknown')unknowns.push('Data sensitivity must be clarified before architecture or execution design.');\nconst facts=[{factId:'intake-company-name',statement:'The request identifies the company as '+clean(data.companyName)+'.',sourceType:'validated-intake',sourceRef:'data.companyName',confidence:'provided'},{factId:'intake-process-description',statement:clean(data.processDescription),sourceType:'validated-intake',sourceRef:'data.processDescription',confidence:'provided'},...found.map(x=>({factId:'catalog-'+x.tool.toLowerCase().replace(/[^a-z0-9]+/g,'-'),statement:x.tool+' is present in the validated tool list; the local catalog lists '+x.capabilities.join(', ')+' as relevant integration capabilities.',sourceType:'synthetic-tool-catalog',sourceRef:'local-tool-catalog:'+x.tool,confidence:'catalog-only'}))];\nif(unknowns.length)warnings.push('This brief contains explicit unknowns; no external company research was performed.');if('contactEmail' in data||'contactName' in data)warnings.push('Contact details were deliberately excluded under data-minimization rules.');\nreturn[{json:{requestId:clean(input.requestId),schemaVersion:'1.0',status:unknowns.length?'needs-human-input':'completed',data:{researchMode:'local-synthetic-tool-catalog-v1',companyScope:clean(data.companyName),facts,toolFindings:found.map(x=>({inputTool:x.tool,catalogTool:x.tool,capabilities:x.capabilities})),goals:uniq(data.goals.map(clean)),unknowns,externalActions:{contactedCompanies:false,webRequests:0,dataModified:false}},warnings,errors:[]}}];"
+      },
+      "id": "9f60d569-5a59-4237-a7e0-04d43731ee49",
+      "name": "Create bounded research brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-60, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": { "responseCode": "={{ $json.status === 'rejected' ? 422 : 200 }}" } },
+      "id": "b9a8893d-6bf8-4cd3-b2de-6541589e4295",
+      "name": "Return bounded research brief",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [200, 0]
+    }
+  ],
+  "connections": {
+    "Receive accepted intake envelope": { "main": [[{ "node": "Create bounded research brief", "type": "main", "index": 0 }]] },
+    "Create bounded research brief": { "main": [[{ "node": "Return bounded research brief", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "00000000-0000-4000-8000-000000000005"
+}
