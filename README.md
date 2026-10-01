@@ -39,6 +39,14 @@ Die Demo läuft lokal mit synthetischen Daten. Es gibt keinen öffentlich zugän
 
 [Fallstudie auf der Webseite](https://nico89x.github.io/nico-joschke-automation-portfolio/multi-agent-ai-operations-hub.html) · [Vollständiger Quellcode](projects/multi-agent-ai-operations-hub/) · [Zentraler Workflow](operations-hub-central-workflow.json) · [Lokaler AI-Prüfworkflow](operations-hub-local-ai-receipt.json)
 
+## ReleaseWatch: echte API-Integration
+
+[Fallstudie, Code und Demo-Video](projects/release-support-triage/) · [31 automatisierte API-/Workflow-Tests](projects/release-support-triage/test/)
+
+Ein synthetisches Support-Ticket wird mit öffentlichen GitHub-Release-Metadaten angereichert und als gesperrter Entwurf zur menschlichen Prüfung vorbereitet. Der echte API-Aufruf wurde am 01.10.2026 geprüft. Das Demo-Video zeigt echte Browser-Aufnahmen des Node.js-Adapters; der 429-Fehler ist ausdrücklich simuliert. Keine externen Schreibaktionen und kein behaupteter Live-n8n-Nachweis für diese zusätzliche Fallstudie.
+
+Für das Hauptprojekt gibt es außerdem einen [frischen, isolierten E2E-Test-Stack](projects/multi-agent-ai-operations-hub/CLEAN_E2E.md). Sein vollständiger Durchlauf ist noch nicht bestätigt. Insgesamt wurden 209 automatisierte Tests lokal bestanden (178 Hauptprojekt + 31 ReleaseWatch); das ersetzt den vollständigen Docker-Test nicht.
+
 ## Weitere Fallstudien
 
 | Fallstudie | Schwerpunkt | Technischer Nachweis |
