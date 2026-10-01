@@ -66,7 +66,8 @@ try{
   const invalid=await post(base,'operations-hub',{...intake(key+'-invalid'),companyName:'X'},422);assert.ok(invalid.errors.length);pass('invalid intake HTTP 422');
   const second=await post(base,'operations-hub',intake(key+'-reject'),202);
   const rejected=await post(base,'operations-hub-review',{requestDbId:second.requestDbId,decision:'rejected',reviewer:'Synthetic E2E Reviewer'},200);assert.equal(rejected.status,'rejected-blocked');assert.equal(rejected.executionGate,false);assert.equal(rejected.localDemo.proposal,null);pass('rejection blocks draft');
-  const counts=docker(['exec','-T','postgres','psql','-U','portfolio_e2e','-d','portfolio_e2e','-Atc',"SELECT json_build_object('requests',(SELECT count(*) FROM project_requests WHERE source='n8n-intake'),'blueprints',(SELECT count(*) FROM project_blueprints),'reviews',(SELECT count(*) FROM audit_events WHERE event_type LIKE '%review%'))"],{quiet:true});
+  // Match the two locally generated keys, independent of a route-specific source label.
+  const counts=docker(['exec','-T','postgres','psql','-U','portfolio_e2e','-d','portfolio_e2e','-Atc',`SELECT json_build_object('requests',(SELECT count(*) FROM project_requests WHERE idempotency_key IN ('${key}','${key}-reject')),'blueprints',(SELECT count(*) FROM project_blueprints))`],{quiet:true});
   const db=JSON.parse(counts);assert.equal(db.requests,2);assert.equal(db.blueprints,2);pass('two accepted requests and two blueprints persisted in fresh PostgreSQL');
   await writeFile(join(root,'.e2e-local','result.json'),JSON.stringify({status:'passed',checkedAt:new Date().toISOString(),project:name,checks,db,scope:'real Docker + n8n + PostgreSQL HTTP routes; no LLM or external SaaS writes'},null,2));
   console.log('PASS: complete clean-stack route check. Result in .e2e-local/result.json');
