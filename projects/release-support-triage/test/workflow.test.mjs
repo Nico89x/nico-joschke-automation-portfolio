@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import { readFile } from 'node:fs/promises';
+import { normalizeRelease, prepareDraft } from '../triage.mjs';
+const workflow=JSON.parse(await readFile(new URL('../workflow.sanitized.json',import.meta.url),'utf8'));
+const code=workflow.nodes.find(n=>n.type==='n8n-nodes-base.code').parameters.jsCode;
+const fixture={id:123,tag_name:'n8n@2.40.5',html_url:'https://github.com/n8n-io/n8n/releases/tag/n8n@2.40.5',published_at:'2026-09-28T10:00:00Z',draft:false,prerelease:false};
+const run=response=>JSON.parse(JSON.stringify(new vm.Script(`(function(){${code}})()`).runInNewContext({$json:response,URL})));
+test('export inactive, no credentials, fixed read-only HTTP URL, edges resolve',()=>{assert.equal(workflow.active,false);const names=new Set(workflow.nodes.map(n=>n.name));for(const n of workflow.nodes){assert.equal(n.credentials,undefined);if(n.type==='n8n-nodes-base.httpRequest'){assert.equal(n.parameters.method,'GET');assert.equal(n.parameters.url,'https://api.github.com/repos/n8n-io/n8n/releases/latest');}}for(const outputs of Object.values(workflow.connections)) for(const branch of outputs.main)for(const edge of branch)assert.ok(names.has(edge.node));});
+test('embedded n8n code matches the tested draft logic',()=>assert.deepEqual(run({statusCode:200,body:fixture})[0].json,prepareDraft({id:'synthetic-n8n-demo',product:'n8n',category:'update-question',installedVersion:'2.0.0'},normalizeRelease(fixture))));
+for(const response of [{statusCode:429},{statusCode:503},{error:'private upstream details'},{statusCode:200,body:{}}]) test('n8n error path closes gate without leaking upstream detail '+JSON.stringify(response),()=>{const output=run(response)[0].json;assert.equal(output.status,'manual-review-required');assert.equal(output.executionGate,false);assert.equal(output.externalActions.messagesSent,0);assert.equal(JSON.stringify(output).includes('private'),false);});

@@ -7,3 +7,4 @@ postgres-data/
 .local-ai-usage.json
 .local-ai-usage.json.tmp
 .local-ai-usage.lock
+.e2e-local/

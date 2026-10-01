@@ -1,3 +1,8 @@
-# Normalize text while keeping generated PDFs byte-for-byte intact.
+# Canonical source files must match embedded n8n strings on Windows and Linux.
 * text=auto
+*.sql text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
 *.pdf binary
+*.mp4 binary

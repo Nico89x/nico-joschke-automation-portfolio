@@ -1,0 +1,32 @@
+name: Portfolio integration evidence
+on:
+  push:
+    paths: ['projects/release-support-triage/**', 'projects/multi-agent-ai-operations-hub/**', '.github/workflows/portfolio-integration-ci.yml']
+  pull_request:
+    paths: ['projects/release-support-triage/**', 'projects/multi-agent-ai-operations-hub/**', '.github/workflows/portfolio-integration-ci.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  api-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - run: node --test
+        working-directory: projects/release-support-triage
+  clean-n8n-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - run: node scripts/verify-clean-e2e.mjs
+        working-directory: projects/multi-agent-ai-operations-hub
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clean-e2e-result
+          path: projects/multi-agent-ai-operations-hub/.e2e-local/result.json
+          if-no-files-found: error

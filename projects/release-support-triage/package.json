@@ -1,0 +1,5 @@
+{
+  "name": "release-support-triage", "private": true, "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "node --test", "demo": "node demo-server.mjs", "live": "node live-check.mjs", "build:workflow": "node build-workflow.mjs" }
+}
