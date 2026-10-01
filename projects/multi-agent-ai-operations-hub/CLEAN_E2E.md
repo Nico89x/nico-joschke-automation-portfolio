@@ -2,7 +2,7 @@
 
 ## Prüfstatus
 
-Der Runner ist vorbereitet und syntaktisch geprüft. Der vollständige Docker-Durchlauf ist lokal noch **nicht bestätigt**, weil die Arbeitsumgebung keinen Zugriff auf die laufende Docker-Engine erhält. Erst ein erfolgreicher Durchlauf mit `status: passed` in `.e2e-local/result.json` gilt als Nachweis. Ein vorhandener Testbericht ersetzt diesen Nachweis nicht.
+Der vollständige Docker-Durchlauf wurde am **01.10.2026 in GitHub Actions erfolgreich bestätigt**: [Lauf 36835141067](https://github.com/Nico89x/nico-joschke-automation-portfolio/actions/runs/36835141067), Commit `fdd7515708cf0b419b7caf6ab73c656edd1a9dcd`. Der bereinigte Bericht wurde als `clean-e2e-result` hochgeladen. Alle aufgeführten HTTP- und Datenbankprüfungen bestanden. Lokal auf dem Laptop bleibt der Engine-Zugriff aus der Arbeitsumgebung gesperrt; der nachgewiesene Lauf fand deshalb im isolierten GitHub-Runner statt.
 
 ## Ausführen
 
@@ -25,4 +25,6 @@ Temporäre Datenbank-Zugangsdaten werden lokal generiert und ausschließlich im 
 
 Nicht behauptet werden: Ausführung aller zehn Workflows, Live-LLM-Aufrufe, reale CRM-Aktionen oder der Live-Test des separaten ReleaseWatch-Workflows.
 
-Der Runner stoppt seinen eigenen Test-Stack am Ende, löscht aber weder Volumes noch bestehende Container. Testressourcen bleiben für die Diagnose erhalten. Die zusätzliche GitHub-Actions-Konfiguration führt denselben Runner aus; ihre Existenz allein bedeutet noch keinen erfolgreichen Lauf.
+Der Runner stoppt seinen eigenen Test-Stack am Ende, löscht aber weder Volumes noch bestehende Container. Lokal bleiben Testressourcen für die Diagnose erhalten; GitHub entsorgt seinen kurzlebigen Runner nach dem Job. Die zusätzliche GitHub-Actions-Konfiguration führt denselben Runner aus. Bei späteren Änderungen ist ihr jeweils aktueller Status zu prüfen.
+
+Der Nachweis verwendet n8n 2.40.5 und PostgreSQL 16/pgvector in einer synthetischen Testumgebung. n8n meldet PostgreSQL 16 als Kompatibilitätsbetrieb und warnt vor dem internen Task-Runner-Modus. Das ist kein empfohlenes Produktions-Deployment und keine Sicherheitsfreigabe.
