@@ -6,11 +6,30 @@ Portfolio für Einstiegsrollen rund um **n8n, Workflow Automation, AI Automation
 
 [Portfolio-Webseite öffnen](https://nico89x.github.io/nico-joschke-automation-portfolio/) · [Kurzprofil als PDF](Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf)
 
+## Über mich
+
+Ich bin Nico Joschke, Quereinsteiger mit eigener Projektpraxis in **n8n, JavaScript, REST APIs, Webhooks und KI-gestützten Workflows**. Ich suche eine Junior-/Associate-Festanstellung in Workflow Automation, AI Automation oder API-Integration, remote innerhalb Deutschlands.
+
+Meine Erfahrung stammt aus nachvollziehbaren Portfolio- und Testprojekten; kommerzielle IT-Berufserfahrung bringe ich bisher nicht mit.
+
+## Portfolio in 90 Sekunden prüfen
+
+- **Überblick:** [Portfolio-Webseite](https://nico89x.github.io/nico-joschke-automation-portfolio/) und [Fallstudie des Hauptprojekts](https://nico89x.github.io/nico-joschke-automation-portfolio/multi-agent-ai-operations-hub.html)
+- **Ablauf sehen:** [echte n8n-Workflow-Screenshots mit Einordnung](projects/multi-agent-ai-operations-hub/docs/screenshots/README.md)
+- **Demo nachvollziehen:** [90-Sekunden-Demo und lokale Prüfschritte](projects/multi-agent-ai-operations-hub/docs/DEMO_RUNBOOK.md)
+- **Code und Qualität prüfen:** [Architektur und lokaler Start](projects/multi-agent-ai-operations-hub/README.md), [Tests](projects/multi-agent-ai-operations-hub/test/) und [GitHub-CI](https://github.com/Nico89x/nico-joschke-automation-portfolio/actions/workflows/operations-hub-ci.yml)
+
+Die Demo läuft lokal mit synthetischen Daten. Es gibt keinen öffentlich zugänglichen Live-Service; die Screenshots zeigen die Workflow-Struktur, nicht allein den Nachweis eines erfolgreichen Durchlaufs.
+
 ## Hauptprojekt
 
 ### Multi-Agent AI Operations Hub
 
-Ein lokal ausführbarer, kontrollierter n8n-Prototyp, der unstrukturierte Automatisierungsanfragen validiert, mit einer PostgreSQL/pgvector-Wissensbasis verbindet und als prüfbaren technischen Entwurf aufbereitet.
+**Problem:** Unstrukturierte Automatisierungsanfragen müssen geprüft, nachvollziehbar geplant und vor einer Ausführung menschlich freigegeben werden.
+
+**Lösung:** Ein lokal ausführbarer n8n-Prototyp validiert Anfragen, verhindert Dubletten, verbindet sie mit einer PostgreSQL/pgvector-Wissensbasis und erstellt einen prüfbaren technischen Entwurf mit Audit-Log.
+
+**Demo-Ergebnis:** Eine gültige synthetische Anfrage endet bei `awaiting-human-review` (HTTP 202). Ungültige Eingaben werden mit HTTP 422 abgewiesen; wiederholte Entscheidungen mit HTTP 409. Auch eine Freigabe erzeugt nur einen lokalen synthetischen Entwurf, keine externen Aktionen. Die Prüfschritte stehen im [Demo-Runbook](projects/multi-agent-ai-operations-hub/docs/DEMO_RUNBOOK.md).
 
 - **Stack:** n8n Community Edition, Docker Compose, PostgreSQL, pgvector, JavaScript, SQL und optional Ollama/Qwen
 - **Kontrollen:** strikte Datentypen, Idempotenz, Audit-Log, RAG-Quellenpflicht, Request- und Versionsbindung bei Freigaben, Human-in-the-loop
@@ -18,7 +37,7 @@ Ein lokal ausführbarer, kontrollierter n8n-Prototyp, der unstrukturierte Automa
 - **Nachweis:** 178 lokale automatisierte Tests bestanden; synthetische AI-Evaluation mit offengelegter Modellvarianz
 - **Reproduzierbarkeit:** vollständige lokale Umgebung, zehn deaktivierte n8n-Exporte, Datenbankschema, Testfälle und technische Dokumentation
 
-[Fallstudie](multi-agent-ai-operations-hub.html) · [Vollständiger Quellcode](projects/multi-agent-ai-operations-hub/) · [Zentraler Workflow](operations-hub-central-workflow.json) · [Lokaler AI-Prüfworkflow](operations-hub-local-ai-receipt.json)
+[Fallstudie auf der Webseite](https://nico89x.github.io/nico-joschke-automation-portfolio/multi-agent-ai-operations-hub.html) · [Vollständiger Quellcode](projects/multi-agent-ai-operations-hub/) · [Zentraler Workflow](operations-hub-central-workflow.json) · [Lokaler AI-Prüfworkflow](operations-hub-local-ai-receipt.json)
 
 ## Weitere Fallstudien
 
@@ -35,7 +54,7 @@ Die fünf älteren bereinigten Exporte enthalten zusammen 94 n8n-Knoten, 31 Code
 - Alle veröffentlichten Workflow-Exporte sind parsebar, standardmäßig deaktiviert und enthalten keine Credential-Objekte.
 - Im Hauptprojekt verweisen Verbindungen ausschließlich auf vorhandene Knoten; JavaScript-Code-Knoten werden automatisiert kompiliert und geprüft.
 - Nur synthetische Daten sind eingecheckt. `.env`, Zugangsdaten und lokale Ausführungsdaten bleiben ausgeschlossen.
-- Der zentrale Operations-Hub-Ablauf nutzt deterministische Agenten-Baselines. Das lokale Sprachmodell liefert nur einen separaten, quellenpflichtigen Hinweis ohne Ausführungsrecht.
+- Der zentrale Operations-Hub-Ablauf nutzt deterministische Agenten-Baselines. Das lokale Sprachmodell liefert nur einen separaten, quellenpflichtigen Hinweis ohne Ausführungsrecht. Die Hash-Vektoren der Testbasis sind keine semantischen Modell-Embeddings und belegen keine semantische RAG-Qualität.
 - Die Systeme sind Portfolio- und Testprojekte, keine behaupteten produktiven Kundenimplementierungen.
 
 ## Urheberschaft und KI-Unterstützung
