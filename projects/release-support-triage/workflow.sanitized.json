@@ -1,0 +1,101 @@
+{
+  "name": "Release Watch - Support Draft (read-only)",
+  "active": false,
+  "nodes": [
+    {
+      "id": "release-start",
+      "name": "Manual synthetic demo",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "release-http",
+      "name": "Read public n8n release",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/n8n-io/n8n/releases/latest",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 6000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "release-review",
+      "name": "Validate metadata and stop for human review",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "class IntegrationError extends Error {\n  constructor(code) { super(code); this.code = code; }\n}\nfunction normalizeRelease(body) {\n  if (!body || typeof body !== 'object' || !Number.isSafeInteger(body.id) || body.id < 1\n      || typeof body.tag_name !== 'string' || body.tag_name.length > 100\n      || !/^n8n@\\d+\\.\\d+\\.\\d+(?:-[a-zA-Z0-9.-]+)?$/.test(body.tag_name)\n      || body.draft !== false || body.prerelease !== false\n      || typeof body.published_at !== 'string' || !Number.isFinite(Date.parse(body.published_at))) throw new IntegrationError('invalid_release');\n  const expected = `https://github.com/n8n-io/n8n/releases/tag/${encodeURIComponent(body.tag_name)}`;\n  let url;\n  try { url = new URL(body.html_url); } catch { throw new IntegrationError('invalid_release_url'); }\n  if (url.href !== expected && url.href !== expected.replace('%40', '@')) throw new IntegrationError('invalid_release_url');\n  return { id: body.id, version: body.tag_name.slice(4), publishedAt: body.published_at, url: url.href };\n}\nfunction validateTicket(ticket) {\n  if (!ticket || typeof ticket !== 'object' || Array.isArray(ticket)\n      || Object.keys(ticket).some(k => !['id', 'product', 'category', 'installedVersion'].includes(k))\n      || typeof ticket.id !== 'string' || !/^synthetic-[a-z0-9-]{1,50}$/.test(ticket.id)\n      || ticket.product !== 'n8n' || !['update-question', 'incident'].includes(ticket.category)\n      || typeof ticket.installedVersion !== 'string' || !/^\\d+\\.\\d+\\.\\d+$/.test(ticket.installedVersion)) throw new IntegrationError('invalid_ticket');\n}\nfunction prepareDraft(ticket, release) {\n  validateTicket(ticket);\n  const installed = ticket.installedVersion.split('.').map(Number), latest = release.version.split('-')[0].split('.').map(Number);\n  let comparison = 0;\n  for (let i = 0; i < 3; i++) if (installed[i] !== latest[i]) { comparison = Math.sign(latest[i] - installed[i]); break; }\n  return { status: 'awaiting-human-review', ticketId: ticket.id, priority: ticket.category === 'incident' ? 'manual-incident-review' : 'normal',\n    versionStatus: comparison > 0 ? 'newer-release-available' : comparison === 0 ? 'same-version' : 'installed-ahead-of-latest-stable',\n    installedVersion: ticket.installedVersion, latestRelease: release,\n    draft: 'Release-Hinweise und Kompatibilität prüfen; Änderungen zuerst in einer getrennten Testumgebung testen. Keine automatische Update-Empfehlung.',\n    executionGate: false, externalActions: { messagesSent: 0, ticketsChanged: 0, updatesInstalled: 0 } };\n}\ntry {\n if($json.statusCode!==200) throw new IntegrationError('upstream_unavailable');\n const release=normalizeRelease($json.body);\n return [{json:prepareDraft({id:'synthetic-n8n-demo',product:'n8n',category:'update-question',installedVersion:'2.0.0'},release)}];\n} catch { return [{json:{status:'manual-review-required',error:'upstream_or_contract_error',executionGate:false,externalActions:{messagesSent:0,ticketsChanged:0,updatesInstalled:0}}}]; }"
+      }
+    }
+  ],
+  "connections": {
+    "Manual synthetic demo": {
+      "main": [
+        [
+          {
+            "node": "Read public n8n release",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read public n8n release": {
+      "main": [
+        [
+          {
+            "node": "Validate metadata and stop for human review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
