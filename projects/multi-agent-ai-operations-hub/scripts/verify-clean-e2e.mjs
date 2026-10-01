@@ -36,13 +36,16 @@ try{
   started=true;docker(['up','-d','--wait','--wait-timeout','300']);
   pass('new randomly named stack healthy; PostgreSQL not exposed to host');
   const mapping=docker(['port','n8n','5678'],{quiet:true});
-  assert.match(mapping,/^127\.0\.0\.1:\d+$/);const base='http://'+mapping;
+  assert.match(mapping,/^127\.0\.0\.1:\d+$/);let base='http://'+mapping;
   const health=await fetch(base+'/healthz',{signal:AbortSignal.timeout(10000)});assert.equal(health.status,200);
   docker(['exec','-T','n8n','n8n','import:credentials','--input=/files/fixture/credentials.json'],{quiet:true});
   docker(['exec','-T','n8n','n8n','import:workflow','--input=/files/fixture/workflows.json'],{quiet:true});
   // All ten exports are imported; only the four local routes needed here are published.
   for(const id of ['e2e02','e2e03','e2e07','e2e08'])docker(['exec','-T','n8n','n8n','publish:workflow','--id='+id],{quiet:true});
   docker(['restart','n8n']);
+  // Docker may assign a new ephemeral host port when the container restarts.
+  const restartedMapping=docker(['port','n8n','5678'],{quiet:true});
+  assert.match(restartedMapping,/^127\.0\.0\.1:\d+$/);base='http://'+restartedMapping;
   let healthy=false;
   for(let i=0;i<60;i++){try{healthy=(await fetch(base+'/healthz',{signal:AbortSignal.timeout(2000)})).status===200;}catch{}if(healthy)break;await new Promise(r=>setTimeout(r,1000));}
   assert.ok(healthy,'restarted n8n healthy');
@@ -67,6 +70,12 @@ try{
   const db=JSON.parse(counts);assert.equal(db.requests,2);assert.equal(db.blueprints,2);pass('two accepted requests and two blueprints persisted in fresh PostgreSQL');
   await writeFile(join(root,'.e2e-local','result.json'),JSON.stringify({status:'passed',checkedAt:new Date().toISOString(),project:name,checks,db,scope:'real Docker + n8n + PostgreSQL HTTP routes; no LLM or external SaaS writes'},null,2));
   console.log('PASS: complete clean-stack route check. Result in .e2e-local/result.json');
+}catch(error){
+  if(started){try{
+    const diagnostics=docker(['logs','--no-color','--tail','80','n8n'],{quiet:true});
+    console.error(diagnostics.replaceAll(env.E2E_DB_PASSWORD,'[redacted]').replaceAll(env.E2E_ENCRYPTION_KEY,'[redacted]'));
+  }catch{console.error('Isolated n8n diagnostics unavailable.');}}
+  throw error;
 }finally{
   if(started){try{docker(['stop'],{quiet:true});}catch{console.error('Could not stop isolated test project '+name);}}
   console.log('Isolated project: '+name+'. Containers and volumes are preserved; no existing project was stopped or deleted. Generated secrets remain in ignored .e2e-local, never upload that folder.');
