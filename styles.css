@@ -6,7 +6,7 @@ a:focus-visible,summary:focus-visible,video:focus-visible,.test-table:focus-visi
 .skip-link{position:fixed;top:12px;left:12px;z-index:30;transform:translateY(-160%);padding:12px 18px;border-radius:8px;background:var(--accent);color:#04251a;font-weight:800}
 .skip-link:focus{transform:translateY(0)}
 .project-navigation{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 28px}
-.project-navigation a{display:inline-flex;align-items:center;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--muted)}
+.project-navigation a[href]{display:inline-flex;align-items:center;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--muted)}
 .project-navigation a:hover{color:var(--accent);border-color:var(--accent)}
 .case-row{margin-bottom:20px}
 .case-grid h3.minor-heading{margin-bottom:8px;color:var(--accent);font-size:.95rem;letter-spacing:0}
