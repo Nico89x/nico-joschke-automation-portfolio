@@ -1,0 +1,19 @@
+name: Portfolio website checks
+on:
+  push:
+    paths: ['index.html', 'multi-agent-ai-operations-hub.html', 'styles.css', 'README.md', '*.json', '*.pdf', '*.svg', 'test/**', '.github/workflows/portfolio-site-ci.yml', 'projects/release-support-triage/**']
+  pull_request:
+    paths: ['index.html', 'multi-agent-ai-operations-hub.html', 'styles.css', 'README.md', '*.json', '*.pdf', '*.svg', 'test/**', '.github/workflows/portfolio-site-ci.yml', 'projects/release-support-triage/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - name: Check links, case studies, accessibility structure and offered exports
+        run: node --test test/portfolio-site.test.mjs

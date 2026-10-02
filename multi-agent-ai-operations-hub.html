@@ -8,12 +8,13 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <a class="skip-link" href="#top">Zum Inhalt springen</a>
     <header class="topbar">
       <a class="brand" href="index.html">NJ<span>/automation</span></a>
-      <nav><a href="index.html#projekte">Alle Fallstudien</a><a class="nav-link" href="https://github.com/Nico89x/nico-joschke-automation-portfolio">GitHub</a></nav>
+      <nav aria-label="Hauptnavigation"><a href="index.html#projekte">Alle Fallstudien</a><a class="nav-link" href="https://github.com/Nico89x/nico-joschke-automation-portfolio">GitHub</a></nav>
     </header>
 
-    <main>
+    <main id="top">
       <section class="section detail-hero">
         <p class="eyebrow">Hauptprojekt · lokal ausführbar · synthetische Daten</p>
         <h1>Multi-Agent AI Operations Hub</h1>
@@ -32,9 +33,9 @@
       <section class="section case-study-section">
         <div class="section-heading"><div><p class="eyebrow">Problem und Ziel</p><h2>Von Freitext zu einem kontrolliert prüfbaren Entwurf.</h2></div><p>Automatisierungsanfragen enthalten häufig Lücken, unklare Schnittstellen und sensible Daten. Das System soll diese Risiken sichtbar machen, bevor irgendetwas extern verändert wird.</p></div>
         <div class="case-grid">
-          <div><h4>Eingabe</h4><p>Unstrukturierte Unternehmensanfrage, aktuelle Tools, Ziele, Einschränkungen und Idempotency-Key.</p></div>
-          <div><h4>Ergebnis</h4><p>Strukturierter Lösungsentwurf mit RAG-Evidenz, Risikoanalyse, Aufwandsspanne und offenen Fragen.</p></div>
-          <div><h4>Kontrolle</h4><p>Namentliche menschliche Freigabe; die Portfolio-Demo erzeugt ausschließlich einen lokalen synthetischen Entwurf.</p></div>
+          <div><h3 class="minor-heading">Eingabe</h3><p>Unstrukturierte Unternehmensanfrage, aktuelle Tools, Ziele, Einschränkungen und Idempotency-Key.</p></div>
+          <div><h3 class="minor-heading">Ergebnis</h3><p>Strukturierter Lösungsentwurf mit RAG-Evidenz, Risikoanalyse, Aufwandsspanne und offenen Fragen.</p></div>
+          <div><h3 class="minor-heading">Kontrolle</h3><p>Namentliche menschliche Freigabe; die Portfolio-Demo erzeugt ausschließlich einen lokalen synthetischen Entwurf.</p></div>
         </div>
       </section>
 
@@ -59,10 +60,11 @@
       </section>
 
       <section class="section case-study-section">
-        <div class="section-heading"><div><p class="eyebrow">Tests und Evaluation</p><h2>Ergebnisse mit sichtbaren Grenzen.</h2></div><p>Alle Angaben stammen aus lokalen synthetischen Testläufen. Es werden keine Produktivdaten oder realen Kundensysteme verwendet.</p></div>
+        <div class="section-heading"><div><p class="eyebrow">Tests und Evaluation</p><h2>Ergebnisse mit sichtbaren Grenzen.</h2></div><p>Die Unit-Tests und AI-Evaluation nutzen lokale synthetische Daten. Zusätzlich wurde ein frischer Docker-/n8n-/PostgreSQL-Stack in GitHub Actions geprüft. Es werden keine Produktivdaten oder realen Kundensysteme verwendet.</p></div>
         <div class="test-table" role="region" aria-label="Testergebnisse" tabindex="0">
           <table><thead><tr><th>Prüfung</th><th>Ergebnis</th><th>Einordnung</th></tr></thead><tbody>
             <tr><td>Automatisierte Tests</td><td>178 bestanden</td><td>Validierung, Routing, Agenten-Baselines, Freigabe-Binding, RAG und Fehlerpfade</td></tr>
+            <tr><td>Frischer n8n-/PostgreSQL-Integrationstest</td><td>Am 01.10.2026 erfolgreich in GitHub Actions</td><td>Zehn Workflow-Importe, vier ausgeführte Webhook-Routen, Planung, Freigabe, Ablehnung, Idempotenz und Datenbank-Persistenz. Kein Live-LLM-Aufruf; keine externen Schreibaktionen. <a href="https://github.com/Nico89x/nico-joschke-automation-portfolio/blob/main/projects/multi-agent-ai-operations-hub/CLEAN_E2E.md">Prüfumfang und Grenzen</a></td></tr>
             <tr><td>Lokale Ollama/n8n-Läufe</td><td>3 erfolgreich</td><td>Synthetische Anfragen; keine externen Aktionen</td></tr>
             <tr><td>Vorab markierter AI-Satz</td><td>14/15 akzeptiert</td><td>Ein Fall stoppte trotz vorhandener passender Quelle: False Negative</td></tr>
             <tr><td>Trigger unter akzeptierten Fällen</td><td>Erstlauf 14/14 · Wiederholung 13/14</td><td>Bewusst offengelegte Modellvarianz; kleine synthetische Stichprobe</td></tr>
@@ -79,6 +81,6 @@
         <div class="file-links"><a href="operations-hub-central-workflow.json" download>Zentralen Operations-Hub-Workflow herunterladen</a><a href="operations-hub-local-ai-receipt.json" download>Lokalen AI-Prüfworkflow herunterladen</a><a href="https://github.com/Nico89x/nico-joschke-automation-portfolio/tree/main/projects/multi-agent-ai-operations-hub">Vollständigen Quellcode auf GitHub prüfen</a><a href="index.html#projekte">Zurück zur Übersicht</a></div>
       </section>
     </main>
-    <footer><span>Nico Joschke · Automation Portfolio</span><span>Portfolio- und Testsystem · Stand September 2026</span></footer>
+    <footer><span>Nico Joschke · Automation Portfolio</span><span>Portfolio- und Testsystem · Stand Oktober 2026</span></footer>
   </body>
 </html>

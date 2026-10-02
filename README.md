@@ -6,6 +6,8 @@ Portfolio für Einstiegsrollen rund um **n8n, Workflow Automation, AI Automation
 
 [Portfolio-Webseite öffnen](https://nico89x.github.io/nico-joschke-automation-portfolio/) · [Kurzprofil als PDF](Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf)
 
+Die Webseite wird zusätzlich durch [automatisierte Portfolio-Prüfungen](test/portfolio-site.test.mjs) abgesichert: lokale Links und Sprungziele, die fünf Fallstudien, HTML-/Accessibility-Struktur und die direkt angebotenen Workflow-Exporte. Ausführen im Repository: `node --test test/portfolio-site.test.mjs`. Das ersetzt keine visuelle Browser-Prüfung; mit `PORTFOLIO_BASE_URL` kann zusätzlich die Erreichbarkeit der öffentlichen Dateien geprüft werden.
+
 ## Über mich
 
 Ich bin Nico Joschke, Quereinsteiger mit eigener Projektpraxis in **n8n, JavaScript, REST APIs, Webhooks und KI-gestützten Workflows**. Ich suche eine Junior-/Associate-Festanstellung in Workflow Automation, AI Automation oder API-Integration, remote innerhalb Deutschlands.

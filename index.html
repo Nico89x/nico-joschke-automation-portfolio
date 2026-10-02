@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <a class="skip-link" href="#top">Zum Inhalt springen</a>
     <header class="topbar">
       <a class="brand" href="#top" aria-label="Zur Startseite">NJ<span>/automation</span></a>
       <nav aria-label="Hauptnavigation">
@@ -24,7 +25,7 @@
         <div class="hero-copy">
           <p class="eyebrow">n8n · Workflow Automation · AI · APIs</p>
           <h1 id="hero-title">Workflow Automation mit sichtbarer Engineering-Logik.</h1>
-          <p class="lede">Ich entwickle nachvollziehbare n8n-Systeme mit Datenvalidierung, API-Anbindungen, RAG, Fehlerpfaden und menschlichen Freigaben. Fünf Fallstudien zeigen die technische Umsetzung – inklusive vollständigem Quellcode, Tests und transparent dokumentierter KI-Unterstützung.</p>
+          <p class="lede">Ich entwickle nachvollziehbare Automatisierungen mit n8n und JavaScript: Datenvalidierung, API-Anbindungen, RAG, Fehlerpfade und menschliche Freigaben. Fünf Fallstudien zeigen technische Exporte und klar gekennzeichnete Testnachweise. Vollständiger Quellcode und automatisierte Tests liegen für den Operations Hub und ReleaseWatch vor; KI-Unterstützung ist transparent dokumentiert.</p>
           <div class="hero-actions">
             <a class="button primary" href="#projekte">Fallstudien prüfen</a>
             <a class="button secondary" href="Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf">Kurzprofil herunterladen</a>
@@ -63,7 +64,15 @@
           <p>Die Diagramme reduzieren komplexe n8n-Workflows auf ihre fachlichen Entscheidungen. Die technischen Exporte und Grenzen bleiben nachvollziehbar.</p>
         </div>
 
-        <article class="case case-featured case-flagship">
+        <nav class="project-navigation" aria-label="Fallstudien direkt auswählen">
+          <a href="#operations-hub">01 Operations Hub</a>
+          <a href="#lead-to-offer">02 Lead-to-Offer</a>
+          <a href="#outreach">03 Outreach</a>
+          <a href="#market-research">04 Market Research</a>
+          <a href="#releasewatch">05 ReleaseWatch + Demo</a>
+        </nav>
+
+        <article id="operations-hub" class="case case-featured case-flagship">
           <div class="case-top">
             <span class="case-index">01</span>
             <span class="case-score">178 Tests · vollständiger Quellcode</span>
@@ -99,6 +108,7 @@
 
             <div class="file-links" aria-label="Nachweise zum Multi-Agent AI Operations Hub">
               <a href="multi-agent-ai-operations-hub.html">Fallstudie öffnen</a>
+              <a href="https://github.com/Nico89x/nico-joschke-automation-portfolio/blob/main/projects/multi-agent-ai-operations-hub/CLEAN_E2E.md">Frischen n8n-Integrationstest prüfen</a>
               <a href="operations-hub-central-workflow.json" download>Zentralen n8n-Workflow prüfen</a>
               <a href="operations-hub-local-ai-receipt.json" download>AI-Prüfworkflow prüfen</a>
               <a href="https://github.com/Nico89x/nico-joschke-automation-portfolio/tree/main/projects/multi-agent-ai-operations-hub">Vollständigen Quellcode öffnen</a>
@@ -106,7 +116,7 @@
           </div>
         </article>
 
-        <article class="case case-featured">
+        <article id="lead-to-offer" class="case case-featured">
           <div class="case-top">
             <span class="case-index">02</span>
             <span class="case-score">49 Knoten · 3 Workflows</span>
@@ -135,7 +145,7 @@
         </article>
 
         <div class="case-row">
-          <article class="case">
+          <article id="outreach" class="case">
             <div class="case-top"><span class="case-index">03</span><span class="case-score">23 Knoten · AI Workflow</span></div>
             <div class="case-main">
               <div class="case-tags"><span>LLM</span><span>Structured JSON</span><span>Evidence</span><span>Human-in-the-loop</span></div>
@@ -148,7 +158,7 @@
             </div>
           </article>
 
-          <article class="case">
+          <article id="market-research" class="case">
             <div class="case-top"><span class="case-index">04</span><span class="case-score">22 Knoten · Research Pipeline</span></div>
             <div class="case-main">
               <div class="case-tags"><span>Research</span><span>API</span><span>Deduplication</span><span>Scoring</span></div>
@@ -161,14 +171,11 @@
             </div>
           </article>
         </div>
-      </section>
-
-      <section id="releasewatch" class="section projects" aria-labelledby="releasewatch-title">
-        <article class="case case-featured">
+        <article id="releasewatch" class="case case-featured" aria-labelledby="releasewatch-title">
           <div class="case-top"><span class="case-index">05</span><span class="case-score">31 Tests · echte öffentliche API</span></div>
           <div class="case-main">
             <div class="case-tags"><span>REST API</span><span>JavaScript</span><span>n8n-Export</span><span>Idempotenz</span><span>Fehlerpfade</span></div>
-            <h2 id="releasewatch-title">ReleaseWatch &amp; Support Triage</h2>
+            <h3 id="releasewatch-title">ReleaseWatch &amp; Support Triage</h3>
             <p class="case-summary">Ein synthetisches Support-Ticket wird mit öffentlichen Release-Metadaten aus der GitHub-API angereichert. Strikte Validierung und begrenzte Wiederholungen führen zu einem gesperrten Entwurf für die menschliche Prüfung. Keine Nachrichten, Updates oder externen Schreibaktionen.</p>
             <div class="case-grid"><div><h4>Echter Nachweis</h4><p>Öffentlicher API-GET am 01.10.2026 erfolgreich. 31 zusätzliche automatisierte Tests lokal und in GitHub Actions bestanden.</p></div><div><h4>Fehlerfälle</h4><p>Doppeltes Ticket, ungültige Eingabe und ausdrücklich simulierter HTTP-429-Fehler. Das Ausführungstor bleibt geschlossen.</p></div><div><h4>Grenze</h4><p>Die Demo zeigt den Node.js-Adapter, keinen Live-n8n-Durchlauf. Idempotenz ist nur im Arbeitsspeicher; Freigabe und Produktivbetrieb sind nicht umgesetzt.</p></div></div>
             <video controls preload="metadata" style="width:100%;border-radius:12px" aria-label="Demo-Montage aus echten Browser-Aufnahmen des Node.js-Adapters"><source src="projects/release-support-triage/demo.mp4" type="video/mp4" /><a href="projects/release-support-triage/demo.mp4">Demo-Video herunterladen</a></video>
