@@ -18,7 +18,12 @@ A synthetic request reaches `POST /webhook/operations-hub`. The workflow validat
 
 ## See the n8n workflow
 
+<details>
+<summary>Open the authentic n8n editor screenshot</summary>
+
 ![Captured n8n editor: central Operations Hub workflow with validation, retrieval, planning and audit](docs/screenshots/01-central-operations-hub.svg)
+
+</details>
 
 This is an authentic editor screenshot. It shows the workflow structure; execution evidence and the separate human-review screenshot are linked in the [screenshot guide](docs/screenshots/README.md) and [demo runbook](docs/DEMO_RUNBOOK.md).
 
