@@ -16,6 +16,12 @@ This system demonstrates those capabilities end to end.
 
 A synthetic request reaches `POST /webhook/operations-hub`. The workflow validates and deduplicates it, retrieves source-labelled local knowledge, prepares a structured proposal, records six stage audit events, and returns HTTP 202 with `awaiting-human-review`. A separate endpoint records one named approve/reject decision. Approval prepares a local synthetic draft; it performs no external action. The [demo runbook](docs/DEMO_RUNBOOK.md) includes a complete example request and the expected response states.
 
+## See the n8n workflow
+
+![Captured n8n editor: central Operations Hub workflow with validation, retrieval, planning and audit](docs/screenshots/01-central-operations-hub.svg)
+
+This is an authentic editor screenshot. It shows the workflow structure; execution evidence and the separate human-review screenshot are linked in the [screenshot guide](docs/screenshots/README.md) and [demo runbook](docs/DEMO_RUNBOOK.md).
+
 ## Intended flow
 
 1. Intake Agent validates and structures the request.
