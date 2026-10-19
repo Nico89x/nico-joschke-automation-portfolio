@@ -146,3 +146,81 @@ test('public website assets respond successfully (optional live audit)', { skip:
     assert.equal(response.status, 200, path);
   }));
 });
+
+
+// Execute the published lead/offer Code nodes with synthetic inputs and no network.
+async function runLeadCode(file, nodeName, payload) {
+  const exported = JSON.parse(await readFile(new URL(file, root), 'utf8'));
+  const workflow = Array.isArray(exported) ? exported[0] : exported;
+  const node = workflow.nodes.find(item => item.name === nodeName);
+  assert.ok(node?.parameters?.jsCode, 'Missing Code node: ' + nodeName);
+  const result = new vm.Script('(function(){\n' + node.parameters.jsCode + '\n})()')
+    .runInNewContext({ $json: payload, Buffer }, { timeout: 1000 });
+  return result[0].json;
+}
+
+const validLead = { name: '  Testkontakt  ', email: ' PORTFOLIO@EXAMPLE.COM ', interest: 'Prozess automatisieren', privacy: true };
+const validOffer = {
+  leadId: 'NW-TEST',
+  selectedPackages: [{ id: 'landingpage', price: 1200 }, { id: 'lead-system', price: 1100 }],
+  monthlyCare: { tier: 'Standard', price: 149 },
+};
+
+test('Lead Intake: valid input is normalized and scored', async () => {
+  const result = await runLeadCode('lead-intake-system.sanitized.json', 'Lead validieren & bewerten', { body: validLead });
+  assert.equal(result.valid, true);
+  assert.equal(result.name, 'Testkontakt');
+  assert.equal(result.email, 'portfolio@example.com');
+  assert.ok(result.leadScore >= 0 && result.leadScore <= 100);
+});
+
+for (const [label, patch, errorCode] of [
+  ['missing name', { name: '' }, 'missing_required_fields'],
+  ['invalid email', { email: 'invalid' }, 'invalid_email'],
+  ['missing consent', { privacy: false }, 'missing_required_fields'],
+  ['honeypot', { websiteConfirm: 'bot' }, 'spam_detected'],
+]) {
+  test('Lead Intake: rejects ' + label, async () => {
+    const result = await runLeadCode('lead-intake-system.sanitized.json', 'Lead validieren & bewerten', { body: { ...validLead, ...patch } });
+    assert.equal(result.valid, false);
+    assert.equal(result.errorCode, errorCode);
+  });
+}
+
+test('Offer Generator: valid packages produce the expected upfront total', async () => {
+  const result = await runLeadCode('offer-generator.sanitized.json', 'Pakete & Preise validieren', validOffer);
+  assert.equal(result.ready, true);
+  assert.equal(result.total, 2300);
+  assert.equal(result.monthlyCare.price, 149);
+});
+
+for (const [label, price] of [['non-numeric text', 'abc'], ['numeric text', '1200'], ['NaN', NaN], ['Infinity', Infinity], ['fractional cent', 1200.001]]) {
+  test('Offer Generator: rejects ' + label + ' without a non-finite total', async () => {
+    const result = await runLeadCode('offer-generator.sanitized.json', 'Pakete & Preise validieren', { ...validOffer, selectedPackages: [{ id: 'landingpage', price }] });
+    assert.equal(result.ready, false);
+    assert.ok(Number.isFinite(result.total));
+    assert.ok(result.errors.length > 0);
+  });
+}
+
+test('Offer Generator: malformed package entries return a validation result', async () => {
+  const result = await runLeadCode('offer-generator.sanitized.json', 'Pakete & Preise validieren', { ...validOffer, selectedPackages: [null] });
+  assert.equal(result.ready, false);
+  assert.ok(Number.isFinite(result.total));
+});
+
+test('Offer Generator: duplicate packages cannot be charged twice', async () => {
+  const result = await runLeadCode('offer-generator.sanitized.json', 'Pakete & Preise validieren', { ...validOffer, selectedPackages: [{ id: 'landingpage', price: 1200 }, { id: 'landingpage', price: 1200 }] });
+  assert.equal(result.ready, false);
+  assert.equal(result.total, 1200);
+});
+
+test('Offer Generator: inherited object keys are not service packages', async () => {
+  const result = await runLeadCode('offer-generator.sanitized.json', 'Pakete & Preise validieren', { ...validOffer, selectedPackages: [{ id: 'constructor', price: 1200 }] });
+  assert.equal(result.ready, false);
+});
+
+test('Offer Generator: monthly care also requires a numeric money value', async () => {
+  const result = await runLeadCode('offer-generator.sanitized.json', 'Pakete & Preise validieren', { ...validOffer, monthlyCare: { tier: 'Standard', price: '149' } });
+  assert.equal(result.ready, false);
+});
