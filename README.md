@@ -23,6 +23,14 @@ Meine Erfahrung stammt aus nachvollziehbaren Portfolio- und Testprojekten; komme
 
 Die Demo läuft lokal mit synthetischen Daten. Es gibt keinen öffentlich zugänglichen Live-Service; die Screenshots zeigen die Workflow-Struktur, nicht allein den Nachweis eines erfolgreichen Durchlaufs.
 
+## Weitere Projekte auf einen Blick
+
+| Projekt | Was sich prüfen lässt | Einstieg |
+| --- | --- | --- |
+| Grocery Store Automation | Interaktive TypeScript-/React-Demo mit Bestellqueue, Lagerbuchung, Fehler/Retry und optionalem n8n-Empfang | [Demo](https://nico89x.github.io/ai-grocery-store-automation/#/simulation) · [Code und Startanleitung](https://github.com/Nico89x/ai-grocery-store-automation) |
+| Lead-to-Offer | Drei bereinigte n8n-Exporte für Lead-Eingang, CRM-Routing und interne Angebotsentwürfe | [Fallstudie](https://nico89x.github.io/nico-joschke-automation-portfolio/#lead-to-offer) |
+| ReleaseWatch | API-Adapter, automatisierte Tests und Video einer synthetischen Support-Triage | [Code und Demo](projects/release-support-triage/) |
+
 ## Hauptprojekt
 
 ### Multi-Agent AI Operations Hub
