@@ -1,18 +1,25 @@
-# Nico Joschke – Automation Portfolio
+# Nico Joschke – Software, Testing & APIs
 
 [![Multi-Agent AI Operations Hub CI](https://github.com/Nico89x/nico-joschke-automation-portfolio/actions/workflows/operations-hub-ci.yml/badge.svg)](https://github.com/Nico89x/nico-joschke-automation-portfolio/actions/workflows/operations-hub-ci.yml)
 
-Portfolio für Einstiegsrollen rund um **n8n, Workflow Automation, AI Automation und API-Integrationen**.
+Portfolio für Junior-/Associate-Rollen in **Softwaretesting/QA, technischem Anwendungssupport, Software-Implementierung und Workflow Automation**.
 
-[Portfolio-Webseite öffnen](https://nico89x.github.io/nico-joschke-automation-portfolio/) · [Kurzprofil als PDF](Nico_Joschke_Automation_Portfolio_Kurzprofil.pdf)
+[Portfolio-Webseite öffnen](https://nico89x.github.io/nico-joschke-automation-portfolio/) · [Druckbares Kurzprofil](kurzprofil.html)
 
 Die Webseite wird zusätzlich durch [automatisierte Portfolio-Prüfungen](test/portfolio-site.test.mjs) abgesichert: lokale Links und Sprungziele, die fünf Fallstudien, HTML-/Accessibility-Struktur und die direkt angebotenen Workflow-Exporte. Ausführen im Repository: `node --test test/portfolio-site.test.mjs`. Das ersetzt keine visuelle Browser-Prüfung; mit `PORTFOLIO_BASE_URL` kann zusätzlich die Erreichbarkeit der öffentlichen Dateien geprüft werden.
 
 ## Über mich
 
-Ich bin Nico Joschke, Quereinsteiger mit eigener Projektpraxis in **n8n, JavaScript, REST APIs, Webhooks und KI-gestützten Workflows**. Ich suche eine Junior-/Associate-Festanstellung in Workflow Automation, AI Automation oder API-Integration, remote innerhalb Deutschlands.
+Ich bin Nico Joschke, Quereinsteiger mit eigener Projektpraxis in **n8n, JavaScript, REST APIs, Webhooks und KI-gestützten Workflows**. Ich suche eine Junior-/Associate-Festanstellung in Softwaretesting/QA, technischem Anwendungssupport, Software-Implementierung oder Workflow Automation, vollständig remote innerhalb Deutschlands, in Vollzeit oder Teilzeit.
 
 Meine Erfahrung stammt aus nachvollziehbaren Portfolio- und Testprojekten; kommerzielle IT-Berufserfahrung bringe ich bisher nicht mit.
+
+## Für die erste Sichtung
+
+- **Webentwicklung und Tests:** [Grocery-Store-Demo](https://nico89x.github.io/ai-grocery-store-automation/#/simulation) mit React/TypeScript, Zustandsisolation und Browsertests.
+- **Persistente Daten:** [Lokale Node.js-/SQLite-Bestell-API](https://github.com/Nico89x/ai-grocery-store-automation/tree/main/server) mit serverseitigen Preisen, Transaktionen und Anfrageschlüsseln.
+- **API-Fehlersuche:** [ReleaseWatch](projects/release-support-triage/) mit synthetischen Support-Tickets, Timeout- und Rate-Limit-Behandlung.
+- **Profil und Grenzen:** [Druckbares Kurzprofil](kurzprofil.html). Das ältere Automatisierungs-PDF bleibt als historische Datei im Repository; die aktuelle Positionierung steht im HTML-Kurzprofil.
 
 ## Portfolio in 90 Sekunden prüfen
 
@@ -25,11 +32,11 @@ Die Demo läuft lokal mit synthetischen Daten. Es gibt keinen öffentlich zugän
 
 ## Weitere Projekte auf einen Blick
 
-| Projekt | Was sich prüfen lässt | Einstieg |
-| --- | --- | --- |
+| Projekt                  | Was sich prüfen lässt                                                                                      | Einstieg                                                                                                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Grocery Store Automation | Interaktive TypeScript-/React-Demo mit Bestellqueue, Lagerbuchung, Fehler/Retry und optionalem n8n-Empfang | [Demo](https://nico89x.github.io/ai-grocery-store-automation/#/simulation) · [Code und Startanleitung](https://github.com/Nico89x/ai-grocery-store-automation) |
-| Lead-to-Offer | Drei bereinigte n8n-Exporte mit 15 Regressionstests für Lead-Validierung und Angebotsdaten | [Aufbau, Tests und lokale Einrichtung](projects/lead-to-offer/) · [Fallstudie](https://nico89x.github.io/nico-joschke-automation-portfolio/#lead-to-offer) |
-| ReleaseWatch | API-Adapter, automatisierte Tests und Video einer synthetischen Support-Triage | [Code und Demo](projects/release-support-triage/) |
+| Lead-to-Offer            | Drei bereinigte n8n-Exporte mit 15 Regressionstests für Lead-Validierung und Angebotsdaten                 | [Aufbau, Tests und lokale Einrichtung](projects/lead-to-offer/) · [Fallstudie](https://nico89x.github.io/nico-joschke-automation-portfolio/#lead-to-offer)     |
+| ReleaseWatch             | API-Adapter, automatisierte Tests und Video einer synthetischen Support-Triage                             | [Code und Demo](projects/release-support-triage/)                                                                                                              |
 
 ## Hauptprojekt
 
@@ -59,11 +66,11 @@ Für das Hauptprojekt wurde ein [frischer, isolierter E2E-Test-Stack](projects/m
 
 ## Weitere Fallstudien
 
-| Fallstudie | Schwerpunkt | Technischer Nachweis |
-|---|---|---|
-| Lead-to-Offer Automation Suite | Validierung, Routing, Deduplizierung, CRM und interne Angebotsentwürfe | [Lead Intake](lead-intake-system.sanitized.json), [CRM Router](crm-system.sanitized.json), [Offer Generator](offer-generator.sanitized.json) |
-| Evidence-based Outreach Intelligence | Website-Evidenz, strukturierte AI-Ausgaben und Human-in-the-loop | [Workflow](outreach-intelligence.sanitized.json) |
-| Market Opportunity Research | API-Recherche, Normalisierung, Deduplizierung und Scoring | [Workflow](handwerk-opportunity.sanitized.json) |
+| Fallstudie                           | Schwerpunkt                                                            | Technischer Nachweis                                                                                                                         |
+| ------------------------------------ | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lead-to-Offer Automation Suite       | Validierung, Routing, Deduplizierung, CRM und interne Angebotsentwürfe | [Lead Intake](lead-intake-system.sanitized.json), [CRM Router](crm-system.sanitized.json), [Offer Generator](offer-generator.sanitized.json) |
+| Evidence-based Outreach Intelligence | Website-Evidenz, strukturierte AI-Ausgaben und Human-in-the-loop       | [Workflow](outreach-intelligence.sanitized.json)                                                                                             |
+| Market Opportunity Research          | API-Recherche, Normalisierung, Deduplizierung und Scoring              | [Workflow](handwerk-opportunity.sanitized.json)                                                                                              |
 
 Die fünf älteren bereinigten Exporte enthalten zusammen 94 n8n-Knoten, 31 Code-Knoten und 14 HTTP-Schnittstellen. Zusammen mit den zwei separat angebotenen Operations-Hub-Exporten liegen sieben direkt prüfbare JSON-Dateien im Repository; das vollständige Hauptprojekt enthält zehn versionierte Workflow-Exporte.
 
