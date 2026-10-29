@@ -4,7 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const root = new URL('../', import.meta.url);
-const pages = ['index.html', 'multi-agent-ai-operations-hub.html'];
+const pages = ['index.html', 'multi-agent-ai-operations-hub.html', 'kurzprofil.html'];
 const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 
 // A deliberately small parser for the two static, script-free portfolio pages.
