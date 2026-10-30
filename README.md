@@ -10,7 +10,7 @@ Die Webseite wird zusätzlich durch [automatisierte Portfolio-Prüfungen](test/p
 
 ## Über mich
 
-Ich bin Nico Joschke. Mein technischer Schwerpunkt liegt auf **Webanwendungen, API-Integration und Workflow-Automatisierung** mit JavaScript/TypeScript, React, Node.js und n8n. In meinen Projekten verbinde ich strukturierte Datenverarbeitung mit Eingabevalidierung, kontrollierter Fehlerbehandlung und automatisierten Tests.
+Ich bin Nico Joschke. Mein technischer Schwerpunkt liegt auf **Webanwendungen, API-Integration und Workflow-Automatisierung** mit JavaScript/TypeScript, React, Node.js und n8n. In meinen Projekten verbinde ich strukturierte Datenverarbeitung mit Eingabevalidierung, kontrollierter Fehlerbehandlung und automatisierten Tests. Ergänzend verfüge ich über Kenntnisse im Datenschutz.
 
 Mein Portfolio dokumentiert die technische Umsetzung anhand von Quellcode, Testfällen und ausführbaren Projektumgebungen. Ich suche eine Festanstellung in **Softwaretesting/QA, technischem Anwendungssupport, Software-Implementierung oder Workflow Automation** – vollständig remote innerhalb Deutschlands, in Vollzeit oder Teilzeit.
 
