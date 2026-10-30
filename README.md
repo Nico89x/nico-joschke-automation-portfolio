@@ -10,9 +10,9 @@ Die Webseite wird zusätzlich durch [automatisierte Portfolio-Prüfungen](test/p
 
 ## Über mich
 
-Ich bin Nico Joschke, Quereinsteiger mit eigener Projektpraxis in **n8n, JavaScript, REST APIs, Webhooks und KI-gestützten Workflows**. Ich suche eine Junior-/Associate-Festanstellung in Softwaretesting/QA, technischem Anwendungssupport, Software-Implementierung oder Workflow Automation, vollständig remote innerhalb Deutschlands, in Vollzeit oder Teilzeit.
+Ich bin Nico Joschke. Mein technischer Schwerpunkt liegt auf **Webanwendungen, API-Integration und Workflow-Automatisierung** mit JavaScript/TypeScript, React, Node.js und n8n. In meinen Projekten verbinde ich strukturierte Datenverarbeitung mit Eingabevalidierung, kontrollierter Fehlerbehandlung und automatisierten Tests.
 
-Meine Erfahrung stammt aus nachvollziehbaren Portfolio- und Testprojekten; kommerzielle IT-Berufserfahrung bringe ich bisher nicht mit.
+Mein Portfolio dokumentiert die technische Umsetzung anhand von Quellcode, Testfällen und ausführbaren Projektumgebungen. Ich suche eine Festanstellung in **Softwaretesting/QA, technischem Anwendungssupport, Software-Implementierung oder Workflow Automation** – vollständig remote innerhalb Deutschlands, in Vollzeit oder Teilzeit.
 
 ## Für die erste Sichtung
 
