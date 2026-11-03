@@ -16,6 +16,7 @@ Mein Portfolio dokumentiert die technische Umsetzung anhand von Quellcode, Testf
 
 ## Für die erste Sichtung
 
+- **Python und FastAPI:** [CyberGuard AI](https://github.com/Nico89x/CyberGuard-AI) mit authentifiziertem Dashboard, synthetischer Demo, pytest und [erfolgreichem Windows-CI-Lauf](https://github.com/Nico89x/CyberGuard-AI/actions/runs/41647379655).
 - **Webentwicklung und Tests:** [Grocery-Store-Demo](https://nico89x.github.io/ai-grocery-store-automation/#/simulation) mit React/TypeScript, Zustandsisolation und Browsertests.
 - **Persistente Daten:** [Lokale Node.js-/SQLite-Bestell-API](https://github.com/Nico89x/ai-grocery-store-automation/tree/main/server) mit serverseitigen Preisen, Transaktionen und Anfrageschlüsseln.
 - **API-Fehlersuche:** [ReleaseWatch](projects/release-support-triage/) mit synthetischen Support-Tickets, Timeout- und Rate-Limit-Behandlung.
@@ -34,6 +35,7 @@ Die Demo läuft lokal mit synthetischen Daten. Es gibt keinen öffentlich zugän
 
 | Projekt                  | Was sich prüfen lässt                                                                                      | Einstieg                                                                                                                                                       |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CyberGuard AI | Python-/FastAPI-Prototyp: Session/CSRF, validierte Sicherheitsereignisse und Belegreferenzen; synthetische Demo, keine validierte Schutzwirkung | [Code, Demo und Tests](https://github.com/Nico89x/CyberGuard-AI) |
 | Grocery Store Automation | Interaktive TypeScript-/React-Demo mit Bestellqueue, Lagerbuchung, Fehler/Retry und optionalem n8n-Empfang | [Demo](https://nico89x.github.io/ai-grocery-store-automation/#/simulation) · [Code und Startanleitung](https://github.com/Nico89x/ai-grocery-store-automation) |
 | Lead-to-Offer            | Drei bereinigte n8n-Exporte mit 15 Regressionstests für Lead-Validierung und Angebotsdaten                 | [Aufbau, Tests und lokale Einrichtung](projects/lead-to-offer/) · [Fallstudie](https://nico89x.github.io/nico-joschke-automation-portfolio/#lead-to-offer)     |
 | ReleaseWatch             | API-Adapter, automatisierte Tests und Video einer synthetischen Support-Triage                             | [Code und Demo](projects/release-support-triage/)                                                                                                              |
