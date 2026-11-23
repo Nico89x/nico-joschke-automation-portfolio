@@ -45,6 +45,8 @@ Die Suite enthält 15 Regressionstests für Lead-Validierung und Angebotsdaten s
 
 ## In n8n nachvollziehen
 
+Der [Notion-Abnahmetest](NOTION-ABNAHMETEST.md) beschreibt die Einrichtung und die Soll-Ergebnisse für Anlegen, Aktualisieren, Fehler und Wiederanlauf.
+
 1. Die drei Exporte in eine separate Testinstanz importieren; sie sind inaktiv und enthalten keine Credentials.
 2. Die eingebetteten Einrichtungsnotizen lesen und die benötigten Notion-Property-Namen sowie die Platzhalter-Datenbank-ID prüfen.
 3. Für einen Integrationstest eine eigene Testdatenbank und passende Credentials zuordnen. Benachrichtigungen zunächst deaktivieren oder auf ausdrücklich vorgesehene Testkanäle begrenzen.

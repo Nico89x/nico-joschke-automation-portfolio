@@ -4,6 +4,7 @@ Eine kleine Portfolio-Fallstudie: Ein synthetisches Support-Ticket fragt nach ei
 
 ## Nachweise
 
+- [QA- und Support-Arbeitsprobe](QA-ARBEITSPROBE.md) mit Abnahmekriterien, reproduzierbaren Fehlerfällen und einem Beispiel für die technische Übergabe.
 - 31 automatisierte Tests: Validierung, Metadaten-Vertrag, Größenlimit, Timeout, begrenzte Wiederholungen, Rate-Limits, Idempotenz und der eingebettete n8n-Code.
 - Echter öffentlicher API-Aufruf am 01.10.2026 erfolgreich: Release `n8n@2.41.4`. Das ist eine Momentaufnahme, keine Update- oder Sicherheitsempfehlung.
 - [Demo-Video](demo.mp4): Montage echter Browser-Aufnahmen des Node.js-Adapters. Erfolgsfall, doppeltes Ticket, ungültige Eingabe und ausdrücklich simulierter HTTP-429-Fehler. Kein Live-n8n-Nachweis.
