@@ -1,6 +1,6 @@
 # Abnahmetest für Lead Intake mit Notion
 
-Dieser Prüfplan deckt den ersten durchgängigen Teil von Lead-to-Offer ab. Ein synthetischer Lead soll in einer getrennten Notion-Testdatenbank angelegt und beim nächsten Aufruf aktualisiert werden. Die Suite im Repository prüft bereits die Eingabevalidierung. Die Live-Abnahme steht aus und benötigt eine separat eingerichtete Testdatenbank sowie eine dafür berechtigte Notion-Integration.
+Dieser Prüfplan deckt den ersten durchgängigen Teil von Lead-to-Offer ab. Ein synthetischer Lead soll in einer getrennten Notion-Testdatenbank angelegt und beim nächsten Aufruf aktualisiert werden. Die Suite im Repository prüft bereits die Eingabevalidierung. Die Live-Abnahme wurde am 24. November 2026 in einer separaten n8n-Testkopie mit einer privaten Testdatenbank ausgeführt. Ergebnisse, Ausführungsnummern und Abweichungen von diesem Prüfplan stehen im [Laufprotokoll](NOTION-TESTLAUF.md). Der gezielte Lookup-Fehler ersetzte dabei einen Entzug der Integrationsberechtigung.
 
 ## Vorbereitung
 
