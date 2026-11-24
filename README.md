@@ -1,26 +1,24 @@
-# Nico Joschke – Software, Testing & APIs
+# Nico Joschke – Automatisierung, Schnittstellen & Softwaretests
 
-[![Multi-Agent AI Operations Hub CI](https://github.com/Nico89x/nico-joschke-automation-portfolio/actions/workflows/operations-hub-ci.yml/badge.svg)](https://github.com/Nico89x/nico-joschke-automation-portfolio/actions/workflows/operations-hub-ci.yml)
+[![Operations Hub CI](https://github.com/Nico89x/nico-joschke-automation-portfolio/actions/workflows/operations-hub-ci.yml/badge.svg)](https://github.com/Nico89x/nico-joschke-automation-portfolio/actions/workflows/operations-hub-ci.yml)
 
-Portfolio für Junior-/Associate-Rollen in **Softwaretesting/QA, technischem Anwendungssupport, Software-Implementierung und Workflow Automation**.
+**Junior / Associate · Workflow-Automatisierung · Softwaretesting / QA · Technische Implementierung & Anwendungssupport**
 
-[Portfolio-Webseite öffnen](https://nico89x.github.io/nico-joschke-automation-portfolio/) · [Druckbares Kurzprofil](kurzprofil.html)
+Nach meiner Arbeit im Malerhandwerk steige ich in die IT ein. In eigenen Projekten setze ich Geschäftsabläufe in n8n um, binde APIs an und prüfe, wie Software bei ungültigen Eingaben, externen Fehlern und Wiederholungen reagiert.
 
-Die Webseite wird zusätzlich durch [automatisierte Portfolio-Prüfungen](test/portfolio-site.test.mjs) abgesichert: lokale Links und Sprungziele, die fünf Fallstudien, HTML-/Accessibility-Struktur und die direkt angebotenen Workflow-Exporte. Ausführen im Repository: `node --test test/portfolio-site.test.mjs`. Das ersetzt keine visuelle Browser-Prüfung; mit `PORTFOLIO_BASE_URL` kann zusätzlich die Erreichbarkeit der öffentlichen Dateien geprüft werden.
+[Portfolio mit Demos](https://nico89x.github.io/nico-joschke-automation-portfolio/) · [Druckbares Kurzprofil](kurzprofil.html) · [GitHub-Profil](https://github.com/Nico89x)
 
-## Über mich
+**Vollständig remote in Deutschland oder hybrid in Karlsruhe · Vollzeit, Teilzeit oder freiberuflich.**
 
-Ich bin Nico Joschke. Mein technischer Schwerpunkt liegt auf **Webanwendungen, API-Integration und Workflow-Automatisierung** mit JavaScript/TypeScript, React, Node.js und n8n. In meinen Projekten verbinde ich strukturierte Datenverarbeitung mit Eingabevalidierung, kontrollierter Fehlerbehandlung und automatisierten Tests. Ergänzend verfüge ich über Kenntnisse im Datenschutz.
+## Ausgewählte Arbeitsproben
 
-Mein Portfolio dokumentiert die technische Umsetzung anhand von Quellcode, Testfällen und ausführbaren Projektumgebungen. Ich suche eine Festanstellung in **Softwaretesting/QA, technischem Anwendungssupport, Software-Implementierung oder Workflow Automation** – vollständig remote innerhalb Deutschlands, in Vollzeit oder Teilzeit.
+| Schwerpunkt | Einstieg | Prüfnachweis |
+| --- | --- | --- |
+| Workflow-Automatisierung | [Operations Hub](projects/multi-agent-ai-operations-hub/) · n8n, PostgreSQL und menschliche Freigabe | [CI-Lauf mit Webhook- und Datenbankprüfungen](https://github.com/Nico89x/nico-joschke-automation-portfolio/actions/runs/36835141067) |
+| Softwaretesting / QA | [Grocery Store](https://nico89x.github.io/ai-grocery-store-automation/#/simulation) · Browser- und API-Tests, Fehler und Wiederholung | [Prüfprotokoll](https://github.com/Nico89x/ai-grocery-store-automation/blob/main/VERIFICATION.md) |
+| Technische Implementierung & Anwendungssupport | [ReleaseWatch](projects/release-support-triage/) · GitHub-API und strukturierte Support-Triage | [QA- und Support-Arbeitsprobe](projects/release-support-triage/QA-ARBEITSPROBE.md) |
 
-## Für die erste Sichtung
-
-- **Python und FastAPI:** [CyberGuard AI](https://github.com/Nico89x/CyberGuard-AI) mit authentifiziertem Dashboard, synthetischer Demo, pytest und [erfolgreichem Windows-CI-Lauf](https://github.com/Nico89x/CyberGuard-AI/actions/runs/41647379655).
-- **Webentwicklung und Tests:** [Grocery-Store-Demo](https://nico89x.github.io/ai-grocery-store-automation/#/simulation) mit React/TypeScript, Zustandsisolation und Browsertests.
-- **Persistente Daten:** [Lokale Node.js-/SQLite-Bestell-API](https://github.com/Nico89x/ai-grocery-store-automation/tree/main/server) mit serverseitigen Preisen, Transaktionen und Anfrageschlüsseln.
-- **API-Fehlersuche:** [ReleaseWatch](projects/release-support-triage/) mit synthetischen Support-Tickets, Timeout- und Rate-Limit-Behandlung.
-- **Profil und Grenzen:** [Druckbares Kurzprofil](kurzprofil.html). Das ältere Automatisierungs-PDF bleibt als historische Datei im Repository; die aktuelle Positionierung steht im HTML-Kurzprofil.
+**Weiterbildung:** n8n Academy, „In der Praxis: KI, Tests und Best Practices“, bestanden am **16. November 2026**. Der Kurs umfasst KI, Tests und Best Practices. Die praktische Anwendung ist in den verlinkten Projekten dokumentiert.
 
 ## Portfolio in 90 Sekunden prüfen
 
@@ -78,7 +76,7 @@ Die fünf älteren bereinigten Exporte enthalten zusammen 94 n8n-Knoten, 31 Code
 
 Das [Windows-Support-Lab](projects/windows-support-lab/) dokumentiert zwei ausgeführte Ticketfälle zu Schreibschutz und Anmeldefehlern.
 
-## Qualitäts- und Claim-Grenzen
+## Prüfstand und Projektgrenzen
 
 - Alle veröffentlichten Workflow-Exporte sind parsebar, standardmäßig deaktiviert und enthalten keine Credential-Objekte.
 - Im Hauptprojekt verweisen Verbindungen ausschließlich auf vorhandene Knoten; JavaScript-Code-Knoten werden automatisiert kompiliert und geprüft.
@@ -88,4 +86,4 @@ Das [Windows-Support-Lab](projects/windows-support-lab/) dokumentiert zwei ausge
 
 ## Urheberschaft und KI-Unterstützung
 
-Konzept, Architekturentscheidungen, Sicherheitsgrenzen, Testinterpretation, Dokumentation und Erklärbarkeit liegen bei Nico Joschke. Bei der Implementierung und technischen Prüfung wurden KI-gestützte Entwicklungswerkzeuge eingesetzt. Als Nachweis gelten der reproduzierbare Aufbau, die überprüfbaren Tests und die ausdrücklich dokumentierten Grenzen – nicht generierter Code allein.
+Konzept, Architekturentscheidungen, Sicherheitsgrenzen, Testinterpretation, Dokumentation und Erklärbarkeit liegen bei Nico Joschke. Bei der Implementierung und technischen Prüfung wurden KI-gestützte Entwicklungswerkzeuge eingesetzt. Quellcode, reproduzierbare Testläufe und die dokumentierten Grenzen machen die Ergebnisse überprüfbar.
