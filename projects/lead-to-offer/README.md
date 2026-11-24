@@ -6,6 +6,8 @@ Drei zusammengehörige n8n-Workflows für Lead-Eingang, CRM-Verarbeitung und int
 
 Anfragen sollen vollständig erfasst, bewertet und ohne unnötige CRM-Dubletten bearbeitet werden. Die Workflows validieren Eingaben, arbeiten mit einem gemeinsamen Notion-Datenmodell und bereiten Angebote zur manuellen Prüfung vor. Die Exporte besitzen eigene Einstiegspunkte; sie sind kein bereits fertig verbundener Ein-Klick-Workflow.
 
+Ein ausgeführter [Notion-Testlauf](NOTION-TESTLAUF.md) dokumentiert Anlage, Aktualisierung, Validierungsfehler und Wiederanlauf.
+
 ## Exporte & Tech-Stack
 
 | Workflow | Einstieg | Export |

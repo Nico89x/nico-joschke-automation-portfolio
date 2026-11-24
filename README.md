@@ -74,6 +74,8 @@ Für das Hauptprojekt wurde ein [frischer, isolierter E2E-Test-Stack](projects/m
 
 Die fünf älteren bereinigten Exporte enthalten zusammen 94 n8n-Knoten, 31 Code-Knoten und 14 HTTP-Schnittstellen. Zusammen mit den zwei separat angebotenen Operations-Hub-Exporten liegen sieben direkt prüfbare JSON-Dateien im Repository; das vollständige Hauptprojekt enthält zehn versionierte Workflow-Exporte.
 
+Das [Windows-Support-Lab](projects/windows-support-lab/) dokumentiert zwei ausgeführte Ticketfälle zu Schreibschutz und Anmeldefehlern.
+
 ## Prüfstand und Projektgrenzen
 
 - Alle veröffentlichten Workflow-Exporte sind parsebar, standardmäßig deaktiviert und enthalten keine Credential-Objekte.
